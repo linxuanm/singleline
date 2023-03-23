@@ -1,5 +1,7 @@
 import ast
 
+from .misc.identifiers import IdentifierGenerator
+
 
 class PreprocessTransformer(ast.NodeTransformer):
     """
@@ -13,6 +15,11 @@ class PreprocessTransformer(ast.NodeTransformer):
     - Rewriting augmented assignments (e.g., `a += b` to `a = a + b`)
     - Unwrapping tuple assignments
     """
+
+    id_gen: IdentifierGenerator
+
+    def __init__(self):
+        self.id_gen = IdentifierGenerator()
 
     def visit_AugAssign(self, node: ast.AugAssign) -> ast.stmt:
         return self.visit(ast.Assign(
@@ -30,6 +37,8 @@ class PreprocessTransformer(ast.NodeTransformer):
         ]
     
     def _mutate_assign(self, var: ast.expr, val: ast.expr):
+
+        # assignment to a subscript
         if isinstance(var, ast.Subscript):
             return ast.Expr(ast.Call(
                 ast.Attribute(var.value, '__setitem__'),
@@ -37,9 +46,23 @@ class PreprocessTransformer(ast.NodeTransformer):
                 []
             ))
         
+        # packed assignment
+        if isinstance(var, ast.List) or isinstance(var, ast.Tuple):
+            name = self.id_gen.throwaway()
+            init = ast.Assign([ast.Name(name)], val, lineno=0)
+            return [
+                init,
+                *[
+                    self._mutate_assign(
+                        v,
+                        ast.Subscript(ast.Name(name), ast.Constant(idx))
+                    ) for idx, v in enumerate(var.elts)
+                ]
+            ]
+        
         return ast.Assign([var], val, lineno=0)
     
-    def _parse_slice(self, slice: ast.expr):
+    def _parse_slice(self, slice: ast.expr) -> ast.expr:
         if isinstance(slice, ast.Slice):
             return ast.Call(
                 ast.Name('slice'),
