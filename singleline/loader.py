@@ -46,7 +46,8 @@ class PreprocessTransformer(ast.NodeTransformer):
                 [
                     slice.lower or ast.Constant(value=None),
                     slice.upper or ast.Constant(value=None),
-                    slice.step or ast.Constant(value=None)],
+                    slice.step or ast.Constant(value=None)
+                ],
                 []
             )
         
