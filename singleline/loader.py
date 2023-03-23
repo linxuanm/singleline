@@ -86,7 +86,11 @@ def load_program(program: str):
     preprocessor = PreprocessTransformer()
     tree = preprocessor.visit(tree)
 
-    print(ast.unparse(tree))
-    ast.increment_lineno
+    # reloads to automatically update line numbers and other attributes
+    # TODO: check if this is needed
+    tree = ast.parse(ast.unparse(tree))
+
+
+
     return tree
 
