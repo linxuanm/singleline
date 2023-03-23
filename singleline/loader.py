@@ -18,7 +18,7 @@ class PreprocessTransformer(ast.NodeTransformer):
         return self.visit(ast.Assign(
             [node.target],
             ast.BinOp(node.target, node.op, node.value),
-            lineno=0
+            lineno=node.lineno
         ))
     
     def visit_Assign(self, node: ast.Assign) -> ast.stmt:
@@ -31,11 +31,11 @@ class PreprocessTransformer(ast.NodeTransformer):
     
     def _mutate_assign(self, var: ast.expr, val: ast.expr):
         if isinstance(var, ast.Subscript):
-            return ast.Call(
+            return ast.Expr(ast.Call(
                 ast.Attribute(var.value, '__setitem__'),
                 [self._parse_slice(var.slice), val],
                 []
-            )
+            ))
         
         return ast.Assign([var], val, lineno=0)
     
@@ -64,6 +64,6 @@ def load_program(program: str):
     tree = preprocessor.visit(tree)
 
     print(ast.unparse(tree))
-    
+    ast.increment_lineno
     return tree
 
