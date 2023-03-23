@@ -1,6 +1,14 @@
 from typing import Dict, Set
 
 
+"""
+Note to self: a function call on `f` at line `n` makes the set of
+free variables in `f` live on line `n - 1`.
+
+SCOPE MATTERS!!! Encode the function scope along side with the variable
+names in liveness & reference resolver.
+"""
+
 class LivenessData:
     """
     Tracks the result of liveness analysis on a function.
