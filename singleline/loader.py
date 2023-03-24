@@ -1,7 +1,8 @@
 import ast
 from typing import Set
 
-from .misc.identifiers import IdentifierGenerator
+from .misc import IdentifierGenerator
+from .misc.types import VRet
 
 
 class PreprocessTransformer(ast.NodeTransformer):
@@ -26,18 +27,18 @@ class PreprocessTransformer(ast.NodeTransformer):
         self.used_id = set()
         self.id_gen = IdentifierGenerator(self.used_id)
 
-    def visit_Name(self, node: ast.Name) -> ast.Name:
+    def visit_Name(self, node: ast.Name) -> VRet:
         self.used_id.add(node.id)
         return node
 
-    def visit_AugAssign(self, node: ast.AugAssign) -> ast.stmt:
+    def visit_AugAssign(self, node: ast.AugAssign) -> VRet:
         return self.visit(ast.Assign(
             [node.target],
             ast.BinOp(node.target, node.op, node.value),
             lineno=node.lineno
         ))
     
-    def visit_Assign(self, node: ast.Assign) -> ast.stmt:
+    def visit_Assign(self, node: ast.Assign) -> VRet:
         chain = node.targets + [node.value]
 
         return [
@@ -45,7 +46,7 @@ class PreprocessTransformer(ast.NodeTransformer):
             for v, k in zip(chain[:: -1], chain[-2 :: -1])
         ]
     
-    def visit_Import(self, node: ast.Import) -> ast.stmt:
+    def visit_Import(self, node: ast.Import) -> VRet:
         names = [i.name for i in node.names]
 
         modules = [
@@ -53,12 +54,46 @@ class PreprocessTransformer(ast.NodeTransformer):
             for i in names
         ]
 
+        # `import xyz.abc` imports the left-most module `xyz` to the
+        # left-most name `xyz`, thus `xyz = __import__('xyz.abc')`
+        asn_names = [i.split('.')[0] for i in names]
+
         assigns = [
             self._mutate_assign(ast.Name(name), module)
-            for name, module in zip(names, modules)
+            for name, module in zip(asn_names, modules)
         ]
 
         return assigns
+    
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> VRet:
+        module = node.module
+        call = ast.Call(ast.Name('__import__'), [ast.Constant(module)], [])
+        packed_var_name = self.id_gen.throwaway()
+        init = self._mutate_assign(ast.Name(packed_var_name), call)
+
+        # gets the `['def', 'ghi']` part of `from abc.def.ghi import foo`s
+        additional_path = module.split('.')[1 :]
+
+        # generators the `__.abc.def` in `foo = __.abc.def.foo`
+        def _gen_prefix():
+            root = ast.Name(packed_var_name)
+            for name in additional_path:
+                root = ast.Attribute(root, name)
+            
+            return root
+
+        var_names = [i.name for i in node.names]
+        packed_rhs = [
+            ast.Attribute(_gen_prefix(), name)
+            for name in var_names
+        ]
+
+        assigns = [
+            self._mutate_assign(ast.Name(name), rhs)
+            for name, rhs in zip(var_names, packed_rhs)
+        ]
+
+        return [init] + assigns
     
     def _mutate_assign(self, var: ast.expr, val: ast.expr):
 
