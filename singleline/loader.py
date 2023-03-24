@@ -45,6 +45,21 @@ class PreprocessTransformer(ast.NodeTransformer):
             for v, k in zip(chain[:: -1], chain[-2 :: -1])
         ]
     
+    def visit_Import(self, node: ast.Import) -> ast.stmt:
+        names = [i.name for i in node.names]
+
+        modules = [
+            ast.Call(ast.Name('__import__'), [ast.Constant(i)], [])
+            for i in names
+        ]
+
+        assigns = [
+            self._mutate_assign(ast.Name(name), module)
+            for name, module in zip(names, modules)
+        ]
+
+        return assigns
+    
     def _mutate_assign(self, var: ast.expr, val: ast.expr):
 
         # assignment to a subscript
@@ -97,6 +112,7 @@ def load_program(program: str):
 
     # reloads to automatically update line numbers and other attributes
     # TODO: check if this is needed
+    print(ast.unparse(tree))
     tree = ast.parse(ast.unparse(tree))
 
 
