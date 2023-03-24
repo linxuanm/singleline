@@ -1,4 +1,5 @@
 import ast
+from typing import Set
 
 from .misc.identifiers import IdentifierGenerator
 
@@ -8,18 +9,26 @@ class PreprocessTransformer(ast.NodeTransformer):
     This class is responsible for applying preprocessing transformations
     to the AST to allow easy handling of syntax sugar. It is meant to
     apply rudimentary code transformation without keeping a context or
-    performing static analysis.
+    performing static analysis, as well as obtain some trivial information
+    about the program such as the used variables.
 
     The current list of preprocessing operations are:
     - Rewriting indexed assignments (e.g., `a[0] = 2` to `a.__setitem__(0, 2)`)
     - Rewriting augmented assignments (e.g., `a += b` to `a = a + b`)
     - Unwrapping tuple assignments
+    - Unwrapping `import` statements
     """
 
+    used_id: Set[str]
     id_gen: IdentifierGenerator
 
     def __init__(self):
-        self.id_gen = IdentifierGenerator()
+        self.used_id = set()
+        self.id_gen = IdentifierGenerator(self.used_id)
+
+    def visit_Name(self, node: ast.Name) -> ast.Name:
+        self.used_id.add(node.id)
+        return node
 
     def visit_AugAssign(self, node: ast.AugAssign) -> ast.stmt:
         return self.visit(ast.Assign(

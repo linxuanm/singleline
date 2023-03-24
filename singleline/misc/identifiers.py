@@ -1,10 +1,33 @@
 # Utilities that control the generation of identifiers.
 
+from typing import Set
+
+
+def _to_excel_name(num: int) -> str:
+    name = ''
+    while num:
+        num, rem = divmod(num - 1, 26)
+        name += chr(65 + rem)
+
+    return name
+
 
 class IdentifierGenerator:
 
-    def __init__(self, obfuscate: bool = False):
+    counter: int
+    obfuscate: bool
+    invalid_pool: Set[str]
+
+    def __init__(self, invalid_pool: Set[str], obfuscate: bool = False):
+        """
+        invalid_pool: a reference to the (currently visited) set of identifier
+        names that are used.
+        obfuscate: whether to generate short, non-sensical names that disregards
+        the usage for it.
+        """
+        self.invalid_pool = invalid_pool
         self.obfuscate = obfuscate
+        self.counter = 0
 
     def throwaway(self):
         """
@@ -13,3 +36,12 @@ class IdentifierGenerator:
         """
 
         return '__'
+    
+    def get_name(self):
+        # TODO: respect name generation context for meaningful names
+        name = _to_excel_name(self.counter)
+        while name in self.invalid_pool:
+            self.counter += 1
+            name = _to_excel_name(self.counter)
+        
+        return '__' + name
