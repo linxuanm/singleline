@@ -54,9 +54,10 @@ class PreprocessTransformer(ast.NodeTransformer):
             for i in names
         ]
 
+        aliases = [i.asname if i.asname is not None else i.name for i in node.names]
         # `import xyz.abc` imports the left-most module `xyz` to the
         # left-most name `xyz`, thus `xyz = __import__('xyz.abc')`
-        asn_names = [i.split('.')[0] for i in names]
+        asn_names = [i.split('.')[0] for i in aliases]
 
         assigns = [
             self._mutate_assign(ast.Name(name), module)
@@ -88,9 +89,10 @@ class PreprocessTransformer(ast.NodeTransformer):
             for name in var_names
         ]
 
+        aliases = [i.asname if i.asname is not None else i.name for i in node.names]
         assigns = [
             self._mutate_assign(ast.Name(name), rhs)
-            for name, rhs in zip(var_names, packed_rhs)
+            for name, rhs in zip(aliases, packed_rhs)
         ]
 
         return [init] + assigns
