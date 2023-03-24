@@ -9,7 +9,7 @@ def _to_excel_name(num: int) -> str:
         num, rem = divmod(num - 1, 26)
         name += chr(65 + rem)
 
-    return name
+    return name[:: -1]
 
 
 class IdentifierGenerator:
@@ -27,7 +27,7 @@ class IdentifierGenerator:
         """
         self.invalid_pool = invalid_pool
         self.obfuscate = obfuscate
-        self.counter = 0
+        self.counter = 1
 
     def throwaway(self):
         """
@@ -44,4 +44,5 @@ class IdentifierGenerator:
             self.counter += 1
             name = _to_excel_name(self.counter)
         
+        self.counter += 1
         return '__' + name
