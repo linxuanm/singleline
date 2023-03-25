@@ -4,6 +4,10 @@ from typing import List
 from ..misc.types import VRet
 
 
+# TODO: Rewrite this part with a concrete graph representation so that the
+# transpiling process can be written as a structure-directed translation
+# rather than the current "based on random and arbitrary heuistics" translation.
+
 # Currently this is the only static analysis pass.
 # The various attributes associated with each `ast.AST` defines the control
 # flow graph in the imaginery IR (see the `.ipynb` files for more technical
