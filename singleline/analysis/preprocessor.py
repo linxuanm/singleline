@@ -132,4 +132,3 @@ class PreprocessTransformer(ast.NodeTransformer):
             )
         
         return slice
-    

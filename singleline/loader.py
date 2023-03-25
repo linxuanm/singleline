@@ -1,11 +1,13 @@
 import ast
+from typing import Tuple
 
-from .analysis import PreprocessTransformer
+from .analysis import PreprocessTransformer, CFGVisitor
+from .misc import IdentifierGenerator
 
 
-def load_program(program: str):
+def load_program(program: str) -> Tuple[ast.AST, IdentifierGenerator]:
     """
-    Parses and preprocesses a program.
+    Parses and preprocesses a program. Also returns its name generator.
     """
 
     tree = ast.parse(program)
@@ -16,6 +18,8 @@ def load_program(program: str):
     # TODO: check if this is needed
     print(ast.unparse(tree))
     tree = ast.parse(ast.unparse(tree))
+
+
 
     return tree
 
