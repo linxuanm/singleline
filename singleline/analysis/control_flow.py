@@ -33,7 +33,7 @@ class CFGVisitor(ast.NodeVisitor):
         self.loop_stack.append(node)
         self.loop_scope.append([])
         self.generic_visit(node)
-        self.loop_stack.append([])
+        self.loop_scope.pop()
         self.loop_stack.pop()
 
     def visit_While(self, node: ast.AST) -> VRet:
@@ -81,3 +81,4 @@ class CFGVisitor(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef) -> VRet:
         sub_cfg = CFGVisitor()
         sub_cfg.generic_visit(node)
+        node.has_return = sub_cfg.has_return
