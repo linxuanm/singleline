@@ -11,7 +11,7 @@ class PreprocessTransformer(ast.NodeTransformer):
     to the AST to allow easy handling of syntax sugar. It is meant to
     apply rudimentary code transformation without keeping a context or
     performing static analysis, as well as obtain some trivial information
-    about the program such as the used variables.
+    about the program such as used identifier names.
 
     The current list of preprocessing operations are:
     - Rewriting indexed assignments (e.g., `a[0] = 2` to `a.__setitem__(0, 2)`)
@@ -26,10 +26,6 @@ class PreprocessTransformer(ast.NodeTransformer):
     def __init__(self):
         self.used_id = set()
         self.id_gen = IdentifierGenerator(self.used_id)
-
-    def visit_Name(self, node: ast.Name) -> VRet:
-        self.used_id.add(node.id)
-        return node
 
     def visit_AugAssign(self, node: ast.AugAssign) -> VRet:
         return self.visit(ast.Assign(
