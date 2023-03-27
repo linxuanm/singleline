@@ -1,6 +1,6 @@
 import ast
 import networkx as nx
-from typing import List, Hashable
+from typing import List, Tuple
 
 from ..misc.types import VRet
 
@@ -50,7 +50,19 @@ class ControlFlowGraph:
         # entry point
         self.graph.add_node('main')
 
-    def analysis_pass(self, code: List[ast.AST], prev: Hashable = 'main'):
+    def _analysis_pass(self, code: List[ast.AST]) -> Tuple(ast.AST, [ast.AST]):
+        """
+        Builds the control flow graph for a portion of code.
+
+        Returns a tuple:
+            - fst: the first node of the sub-graph representing the give code
+            - snd: a list of all the possible ending nodes of the sub-graph
+
+        Note that if a branch of the graph ends in a `return`, `break` or `continue`,
+        it is treated as a "dead-end" ad will not be included in the out-flowing nodes
+        of the sub-graph (i.e., the second value of the returned tuple).
+        """
+
         batch = NodeBundle()
         for node in code:
             if ControlFlowGraph._is_compound_node(node):
