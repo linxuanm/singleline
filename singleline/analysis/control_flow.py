@@ -1,6 +1,6 @@
 import ast
 import networkx as nx
-from typing import List
+from typing import List, Hashable
 
 from ..misc.types import VRet
 
@@ -18,6 +18,23 @@ class NodeBundle:
     def append(self, node: ast.AST):
         self.bundle.append(node)
 
+    def flatten(self):
+        self.bundle = NodeBundle._flatten(self.bundle)
+
+    def is_empty(self) -> bool:
+        return len(self.bundle) == 0
+
+    @staticmethod
+    def _flatten(xs: any) -> List[any]:
+        res = []
+        for x in xs:
+            if isinstance(x, list):
+                res.extend(NodeBundle.flatten(x))
+            else:
+                res.append(x)
+
+        return res
+
 
 class ControlFlowGraph:
     """
@@ -33,10 +50,18 @@ class ControlFlowGraph:
         # entry point
         self.graph.add_node('main')
 
-    def analysis_pass(self, code: List[ast.AST]):
+    def analysis_pass(self, code: List[ast.AST], prev: Hashable = 'main'):
         batch = NodeBundle()
         for node in code:
-            pass
+            if ControlFlowGraph._is_compound_node(node):
+                break
 
-    def _is_compound_node(self, node: ast.AST):
+            batch.append(node)
+
+        batch.flatten()
+        # self.graph.add_node
+
+    @staticmethod
+    def _is_compound_node(node: ast.AST):
         types = [ast.If, ast.For, ast.While]
+        return not any(isinstance(node, t) for t in types)
