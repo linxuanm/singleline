@@ -72,16 +72,22 @@ class ControlFlowGraph:
             else:
                 code_segments[-1].append(node)
 
-        blocks = [
-            i for i in code_segments
-            if not (isinstance(i, NodeBundle) and i.is_empty())
-        ]
-
         first = None # Entry node for `code`.
         prev = None # Out-flowing nodes from the previous block.
 
-        for i in blocks:
-            pass
+        for i in code_segments:
+            if isinstance(i, NodeBundle) and i.is_empty():
+                continue
+
+            curr_in, curr_out = self._expand_single_node(i)
+            if first is None:
+                first = curr_in
+            
+            if prev is not None:
+                for in_node in prev:
+                    self.graph.add_edge(in_node, curr_in)
+            
+            prev = curr_out
 
         # Dummy control-flow node.
         if first is None:
@@ -90,6 +96,24 @@ class ControlFlowGraph:
             return (node, [node])
         
         return (first, prev)
+    
+    def _expand_single_node(self, node) -> Tuple(ast.AST, [ast.AST]):
+        """
+        Adds the control-flow graph of `node` as a separate, disconnected
+        sub-graph to `self.graph`, and returns the entry node and list of
+        out-flowing nodes of the generated graph to be connected to the rest
+        of the control-flow graph.
+        """
+
+        if isinstance(node, NodeBundle): # Straight line code.
+            self.graph.add_node(node)
+            return (node, [node])
+        elif isinstance(node, ast.If):
+            raise NotImplementedError
+        elif isinstance(node, ast.While):
+            raise NotImplementedError
+        elif isinstance(node, ast.For):
+            raise NotImplementedError
 
     @staticmethod
     def _is_compound_node(node: ast.AST):
