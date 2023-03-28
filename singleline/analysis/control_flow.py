@@ -6,6 +6,7 @@ from ..misc.types import VRet
 
 
 # A hashable wrapper for `List[ast.AST]`.
+# TODO: fix the types that involves `NodeBundle` (currently incorrect)
 class NodeBundle:
 
     bundle: List[ast.AST]
@@ -63,15 +64,32 @@ class ControlFlowGraph:
         of the sub-graph (i.e., the second value of the returned tuple).
         """
 
-        batch = NodeBundle()
+        code_segments = [NodeBundle()]
         for node in code:
             if ControlFlowGraph._is_compound_node(node):
-                break
+                code_segments.append(node)
+                code_segments.append(NodeBundle())
+            else:
+                code_segments[-1].append(node)
 
-            batch.append(node)
+        blocks = [
+            i for i in code_segments
+            if not (isinstance(i, NodeBundle) and i.is_empty())
+        ]
 
-        batch.flatten()
-        # self.graph.add_node
+        first = None # Entry node for `code`.
+        prev = None # Out-flowing nodes from the previous block.
+
+        for i in blocks:
+            pass
+
+        # Dummy control-flow node.
+        if first is None:
+            node = NodeBundle()
+            self.graph.add_node(node)
+            return (node, [node])
+        
+        return (first, prev)
 
     @staticmethod
     def _is_compound_node(node: ast.AST):
