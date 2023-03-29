@@ -6,6 +6,9 @@ SingleLine is a command-line tool that transforms any Python file or function in
 
 ## Installing
 
+THIS PROJECT IS NOT FINISHED AND NOT PUBLISHED YET!!!
+But later on you can:
+
 Use `pip` to install:
 ```sh
 pip install singleline

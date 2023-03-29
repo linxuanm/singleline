@@ -76,9 +76,6 @@ class ControlFlowGraph:
         prev = None # Out-flowing nodes from the previous block.
 
         for i in code_segments:
-            if isinstance(i, NodeBundle) and i.is_empty():
-                continue
-
             curr_in, curr_out = self._expand_single_node(i)
             if first is None:
                 first = curr_in
@@ -109,7 +106,7 @@ class ControlFlowGraph:
             self.graph.add_node(node)
             return (node, [node])
         elif isinstance(node, ast.If):
-            raise NotImplementedError
+            pass
         elif isinstance(node, ast.While):
             raise NotImplementedError
         elif isinstance(node, ast.For):
