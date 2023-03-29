@@ -1,8 +1,22 @@
 import ast
 import networkx as nx
+from enum import Enum, auto
 from typing import List, Tuple
 
 from ..misc.types import VRet
+
+
+class CFGLabels(Enum):
+    """
+    An enumeration of all possible labels in case a branching occurs at
+    a node in the CFG.
+
+    For instance, the `ast.If` node can have two outgoing edges labeled
+    as `CFGLabels.IF` and `CFGLabels.ELSE`.
+    """
+
+    IF = auto()
+    ELSE = auto()
 
 
 # A hashable wrapper for `List[ast.AST]`.
