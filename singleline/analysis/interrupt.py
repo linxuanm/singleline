@@ -1,6 +1,14 @@
 import ast
+from typing import List, Tuple
 
 from ..misc.types import VRet
+
+
+def has_interrupt(code: List[ast.AST]) -> Tuple[bool, bool]:
+    visitor = InterruptVisitor()
+    visitor.visit(code)
+
+    return visitor.has_break, visitor.has_return
 
 
 class InterruptVisitor(ast.NodeVisitor):

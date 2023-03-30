@@ -4,6 +4,7 @@ from enum import Enum, auto
 from typing import List, Tuple
 
 from ..misc.types import VRet
+from .interrupt import has_interrupt
 
 
 class CFGLabels(Enum):
@@ -17,6 +18,8 @@ class CFGLabels(Enum):
 
     IF = auto()
     ELSE = auto()
+    RET_FLAG = auto()
+    INNER_LOOP = auto()
 
 
 # A hashable wrapper for `List[ast.AST]`.
@@ -134,7 +137,38 @@ class ControlFlowGraph:
 
             return (node, if_out + else_out)
         elif isinstance(node, ast.While):
-            raise NotImplementedError
+            self.graph.add_node(node)
+            has_break, has_ret = has_interrupt(node.body)
+
+            # Populate some properties of the loop.
+            node.has_break = has_break,
+            node.has_ret = has_ret
+
+            # Node that links to the code pieces following this loop.
+            out_node = NodeBundle()
+            self.graph.add_node(out_node)
+            self.graph.add_node(node, out_node)
+
+            # The inner section of a loop is created as a sub_graph connected
+            # with an edge labeled as `CFGLabels.IGNORE` to prevent the graph
+            # rewriting process from treating the interior of a loop as an outcome
+            # of this loop (e.g., since the inner section of a loop always ends
+            # in graph nodes with no outgoing edges due to its compilation to a
+            # lambda `f` in `next(filter(f, xs))`, the transformer of a surronding
+            # `if` node may mistaken the loop node for being able to raise an
+            # interruption in the surronding function due to the existence of
+            # terminal nodes in the sub-graph of the loop).
+
+            # If the loop can interrupt with `return`, use a dummy node that has
+            # no outgoing edges to tell the graph rewriter that an interruption
+            # may occur.
+            if has_ret:
+                dummy_node = NodeBundle()
+                self.graph.add_node(dummy_node)
+                self.graph.add_edge(node, dummy_node, label=CFGLabels.RET_FLAG)
+
+            return (node, [out_node])
+
         elif isinstance(node, ast.For):
             raise NotImplementedError
 
