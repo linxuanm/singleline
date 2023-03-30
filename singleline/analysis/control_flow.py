@@ -79,12 +79,17 @@ class ControlFlowGraph:
         """
 
         code_segments = [NodeBundle()]
+        interrupt = False
         for node in code:
             if ControlFlowGraph._is_compound_node(node):
                 code_segments.append(node)
                 code_segments.append(NodeBundle())
             else:
                 code_segments[-1].append(node)
+
+            if ControlFlowGraph._is_interrupt_node(node):
+                interrupt = True
+                break
 
         first = None # Entry node for `code`.
         prev = None # Out-flowing nodes from the previous block.
@@ -106,7 +111,7 @@ class ControlFlowGraph:
             self.graph.add_node(node)
             return (node, [node])
         
-        return (first, prev)
+        return (first, [] if interrupt else prev)
     
     def _expand_single_node(self, node) -> Tuple(ast.AST, [ast.AST]):
         """
@@ -119,8 +124,15 @@ class ControlFlowGraph:
         if isinstance(node, NodeBundle): # Straight line code.
             self.graph.add_node(node)
             return (node, [node])
-        elif isinstance(node, ast.If):
-            pass
+        elif isinstance(node, ast.If): # If statement.
+            self.graph.add_node(node)
+            if_in, if_out = self._analysis_pass(node.body)
+            else_in, else_out = self._analysis_pass(node.orelse)
+
+            self.graph.add_edge(node, if_in, label=CFGLabels.IF)
+            self.graph.add_edge(node, else_in, label=CFGLabels.ELSE)
+
+            return (node, if_out + else_out)
         elif isinstance(node, ast.While):
             raise NotImplementedError
         elif isinstance(node, ast.For):
@@ -130,3 +142,8 @@ class ControlFlowGraph:
     def _is_compound_node(node: ast.AST):
         types = [ast.If, ast.For, ast.While]
         return not any(isinstance(node, t) for t in types)
+    
+    @staticmethod
+    def _is_interrupt_node(node: ast.AST):
+        types = [ast.Break, ast.Continue, ast.Return]
+        return any(isinstance(node, t) for t in types)
