@@ -16,10 +16,10 @@ class CFGLabels(Enum):
     as `CFGLabels.IF` and `CFGLabels.ELSE`.
     """
 
-    IF = auto()
-    ELSE = auto()
-    RET_FLAG = auto()
-    INNER_LOOP = auto()
+    IF = auto() # `if` statement
+    ELSE = auto() # `if` statement
+    RET_FLAG = auto() # loops
+    IGNORE = auto() # loop interior, ignore during interrupt tracing
 
 
 # A hashable wrapper for `List[ast.AST]`.
@@ -136,41 +136,44 @@ class ControlFlowGraph:
             self.graph.add_edge(node, else_in, label=CFGLabels.ELSE)
 
             return (node, if_out + else_out)
-        elif isinstance(node, ast.While):
-            self.graph.add_node(node)
-            has_break, has_ret = has_interrupt(node.body)
+        elif isinstance(node, ast.While) or isinstance(node, ast.For):
+            return self._build_loop_graph(node)
+        
+    def _build_loop_graph(self, node: ast.AST) -> Tuple[ast.AST, ast.AST]:
+        self.graph.add_node(node)
+        has_break, has_ret = has_interrupt(node.body)
 
-            # Populate some properties of the loop.
-            node.has_break = has_break,
-            node.has_ret = has_ret
+        # Populate some properties of the loop.
+        node.has_break = has_break,
+        node.has_ret = has_ret
 
-            # Node that links to the code pieces following this loop.
-            out_node = NodeBundle()
-            self.graph.add_node(out_node)
-            self.graph.add_node(node, out_node)
+        # Node that links to the code pieces following this loop.
+        out_node = NodeBundle()
+        self.graph.add_node(out_node)
+        self.graph.add_node(node, out_node)
 
-            # The inner section of a loop is created as a sub_graph connected
-            # with an edge labeled as `CFGLabels.IGNORE` to prevent the graph
-            # rewriting process from treating the interior of a loop as an outcome
-            # of this loop (e.g., since the inner section of a loop always ends
-            # in graph nodes with no outgoing edges due to its compilation to a
-            # lambda `f` in `next(filter(f, xs))`, the transformer of a surronding
-            # `if` node may mistaken the loop node for being able to raise an
-            # interruption in the surronding function due to the existence of
-            # terminal nodes in the sub-graph of the loop).
+        # The inner section of a loop is created as a sub_graph connected
+        # with an edge labeled as `CFGLabels.IGNORE` to prevent the graph
+        # rewriting process from treating the interior of a loop as an outcome
+        # of this loop (e.g., since the inner section of a loop always ends
+        # in graph nodes with no outgoing edges due to its compilation to a
+        # lambda `f` in `next(filter(f, xs))`, the transformer of a surronding
+        # `if` node may mistaken the loop node for being able to raise an
+        # interruption in the surronding function due to the existence of
+        # terminal nodes in the sub-graph of the loop).
 
-            # If the loop can interrupt with `return`, use a dummy node that has
-            # no outgoing edges to tell the graph rewriter that an interruption
-            # may occur.
-            if has_ret:
-                dummy_node = NodeBundle()
-                self.graph.add_node(dummy_node)
-                self.graph.add_edge(node, dummy_node, label=CFGLabels.RET_FLAG)
+        inner_in, _ = self._analysis_pass(node.body)
+        self.graph.add_edge(node, inner_in, label=CFGLabels.IGNORE)
 
-            return (node, [out_node])
+        # If the loop can interrupt with `return`, use a dummy node that has
+        # no outgoing edges to tell the graph rewriter that an interruption
+        # may occur.
+        if has_ret:
+            dummy_node = NodeBundle()
+            self.graph.add_node(dummy_node)
+            self.graph.add_edge(node, dummy_node, label=CFGLabels.RET_FLAG)
 
-        elif isinstance(node, ast.For):
-            raise NotImplementedError
+        return (node, [out_node])
 
     @staticmethod
     def _is_compound_node(node: ast.AST):
