@@ -68,7 +68,7 @@ class ControlFlowGraph:
         # entry point
         self.graph.add_node('main')
 
-    def _analysis_pass(self, code: List[ast.AST]) -> Tuple(ast.AST, [ast.AST]):
+    def _analysis_pass(self, code: List[ast.AST]) -> Tuple[ast.AST, List[ast.AST]]:
         """
         Builds the control flow graph for a portion of code.
 
@@ -116,7 +116,7 @@ class ControlFlowGraph:
         
         return (first, [] if interrupt else prev)
     
-    def _expand_single_node(self, node) -> Tuple(ast.AST, [ast.AST]):
+    def _expand_single_node(self, node) -> Tuple[ast.AST, List[ast.AST]]:
         """
         Adds the control-flow graph of `node` as a separate, disconnected
         sub-graph to `self.graph`, and returns the entry node and list of
@@ -138,6 +138,8 @@ class ControlFlowGraph:
             return (node, if_out + else_out)
         elif isinstance(node, ast.While) or isinstance(node, ast.For):
             return self._build_loop_graph(node)
+        
+        raise NotImplementedError(type(node))
         
     def _build_loop_graph(self, node: ast.AST) -> Tuple[ast.AST, ast.AST]:
         self.graph.add_node(node)
@@ -178,7 +180,7 @@ class ControlFlowGraph:
     @staticmethod
     def _is_compound_node(node: ast.AST):
         types = [ast.If, ast.For, ast.While]
-        return not any(isinstance(node, t) for t in types)
+        return any(isinstance(node, t) for t in types)
     
     @staticmethod
     def _is_interrupt_node(node: ast.AST):
