@@ -1,10 +1,21 @@
 import ast
 import networkx as nx
 from enum import Enum, auto
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from ..misc.types import VRet
 from .interrupt import has_interrupt
+
+
+def control_flow_pass(node: Union[ast.Module, ast.FunctionDef]):
+    """
+    Populates the `graph` attribute of a module or function with the CFG
+    of its content with an instance of `nx.DiGraph`.
+    """
+
+    cfg = ControlFlowGraph()
+    cfg._analysis_pass(node.body)
+    node.graph = cfg.graph
 
 
 class CFGLabels(Enum):
@@ -65,9 +76,6 @@ class ControlFlowGraph:
     def __init__(self):
         self.graph = nx.classes.DiGraph()
 
-        # entry point
-        self.graph.add_node('main')
-
     def _analysis_pass(self, code: List[ast.AST]) -> Tuple[ast.AST, List[ast.AST]]:
         """
         Builds the control flow graph for a portion of code.
@@ -89,6 +97,9 @@ class ControlFlowGraph:
                 code_segments.append(NodeBundle())
             else:
                 code_segments[-1].append(node)
+
+            if isinstance(node, ast.FunctionDef):
+                control_flow_pass(node)
 
             if ControlFlowGraph._is_interrupt_node(node):
                 interrupt = True
@@ -152,7 +163,7 @@ class ControlFlowGraph:
         # Node that links to the code pieces following this loop.
         out_node = NodeBundle()
         self.graph.add_node(out_node)
-        self.graph.add_node(node, out_node)
+        self.graph.add_edge(node, out_node)
 
         # The inner section of a loop is created as a sub_graph connected
         # with an edge labeled as `CFGLabels.IGNORE` to prevent the graph

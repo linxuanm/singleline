@@ -6,7 +6,8 @@ from ..misc.types import VRet
 
 def has_interrupt(code: List[ast.AST]) -> Tuple[bool, bool]:
     visitor = InterruptVisitor()
-    visitor.visit(code)
+    for i in code:
+        visitor.visit(i)
 
     return visitor.has_break, visitor.has_return
 

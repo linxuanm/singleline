@@ -1,7 +1,9 @@
 import ast
 import unittest
+import networkx as nx
 
 from .context import singleline
+from .plot import plot_graph
 
 
 SIMPLE_FUNC = """
@@ -25,8 +27,9 @@ class ControlFlowGraphTest(unittest.TestCase):
 
     def test_simple_return(self):
         tree = ast.parse(SIMPLE_FUNC)
-        cfg = singleline.analysis.ControlFlowGraph()
-        cfg._analysis_pass(tree.body)
+        singleline.analysis.control_flow_pass(tree)
+
+        plot_graph(tree.body[0].graph)
 
 
 if __name__ == '__main__':
