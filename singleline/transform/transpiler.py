@@ -27,6 +27,9 @@ class GraphTranspiler:
         
         assert node in self.graph
 
+        # Flatten the nodes into layers to determine execution path coercion.
+        layers = []
+
         exprs = []
         while node is not None:
             pass
