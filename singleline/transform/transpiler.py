@@ -1,9 +1,7 @@
 import ast
 import networkx as nx
-from types import Union
 
 from ..misc.identifiers import IdentifierGenerator
-from ..analysis.control_flow import CFGLabels
 
 
 class GraphTranspiler:
@@ -32,7 +30,6 @@ class GraphTranspiler:
 
         exprs = []
         while node is not None:
-            pass
             node = next(self.graph.successors(node), None)
 
     def transpile_single(self, stmt: ast.AST) -> str:
@@ -44,11 +41,3 @@ class GraphTranspiler:
             stmt = ast.NamedExpr(name, value)
 
         return ast.unparse(stmt)
-    
-    def _get_successors_ignore(self, node: ast.AST):
-        successors = []
-        for _, successor, edge in self.graph.out_edges(node, data=True):
-            if edge.get('label') != CFGLabels.IGNORE:
-                successors.append(successor)
-
-        return successors

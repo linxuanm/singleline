@@ -14,7 +14,7 @@ def control_flow_pass(node: Union[ast.Module, ast.FunctionDef]):
     """
 
     cfg = ControlFlowGraph()
-    cfg._analysis_pass(node.body)
+    cfg.build_cfg(node, node.body)
     node.graph = cfg.graph
 
 
@@ -75,6 +75,14 @@ class ControlFlowGraph:
 
     def __init__(self):
         self.graph = nx.classes.DiGraph()
+    
+    def build_cfg(self, head: ast.AST, code: List[ast.AST]):
+        # `head` is an `ast.AST` that represents the container for `code`. It is
+        # used as an entry point to the graph.
+
+        self.graph.add_node(head)
+        top, _ = self._analysis_pass(code)
+        self.graph.add_edge(head, top)
 
     def _analysis_pass(self, code: List[ast.AST]) -> Tuple[ast.AST, List[ast.AST]]:
         """
@@ -104,6 +112,7 @@ class ControlFlowGraph:
             if ControlFlowGraph._is_interrupt_node(node):
                 interrupt = True
                 break
+        print(code_segments)
 
         first = None # Entry node for `code`.
         prev = None # Out-flowing nodes from the previous block.

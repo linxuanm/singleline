@@ -1,8 +1,17 @@
 import ast
-from typing import Set
+from typing import Set, Tuple
 
 from ..misc import IdentifierGenerator
 from ..misc.types import VRet
+
+
+def preprocess(program: str) -> Tuple[ast.AST, IdentifierGenerator]:
+    tree = ast.parse(program)
+
+    transformer = PreprocessTransformer()
+    transformer.visit(tree)
+
+    return tree, transformer.id_gen
 
 
 class PreprocessTransformer(ast.NodeTransformer):
