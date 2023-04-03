@@ -112,7 +112,6 @@ class ControlFlowGraph:
             if ControlFlowGraph._is_interrupt_node(node):
                 interrupt = True
                 break
-        print(code_segments)
 
         first = None # Entry node for `code`.
         prev = None # Out-flowing nodes from the previous block.

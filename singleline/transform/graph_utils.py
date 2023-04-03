@@ -1,8 +1,30 @@
 import ast
 import networkx as nx
-from typing import Set, Dict, Tuple
+from typing import Set, Dict, List
 
-from ..analysis import CFGLabels
+from ..analysis import CFGLabels, NodeBundle
+
+
+def clean_up_graph(graph: nx.classes.DiGraph):
+    """
+    Removes all placeholder empty `NodeBundle` from the graph.
+    """
+
+    empty_nodes = [
+        i for i in graph.nodes
+        if isinstance(i, NodeBundle) and i.is_empty()
+    ]
+
+    for node in empty_nodes:
+        for pred in graph.predecessors(node):
+            for succ in graph.successors(node):
+                orig_label = graph[pred][node].get('label')
+                if orig_label is None:
+                    graph.add_edge(pred, succ)
+                else:
+                    graph.add_edge(pred, succ, label=orig_label)
+    
+    graph.remove_nodes_from(empty_nodes)
 
 
 def get_successors(graph: nx.classes.DiGraph, node: ast.AST):
@@ -21,29 +43,29 @@ def get_last_convergence(graph: nx.classes.DiGraph, node: ast.AST) -> ast.AST:
     If no successors converge, returns the given node.
 
     TODO: find a better algorithm for this O(N^2) abomination.
-    """
+    """ 
+    
+    def _search_path(node: ast.AST, path: Dict[ast.AST, int]) -> List[Dict[ast.AST, int]]:
+        succs = list(get_successors(graph, node))
+        if not succs:
+            return [path]
 
-    succs = graph[node]
-    print(' 123',succs)
-    #while len(succs) == 1:
+        branches = []
+        for succ in succs:
+            if succ in path: # sanity check for cyclic CFG (maybe in future versions)
+                continue
+
+            new_path = {**path}
+            new_path[succ] = path[node] + 1
+            branches.append(_search_path(succ, new_path))
         
+        return sum(branches, [])
     
-    def _search_path(node: ast.AST) -> Dict[ast.AST, int]:
-        front = [node]
-        visited = {node: 0}
-        while front:
-            curr = front.pop()
-            for succ in get_successors(graph, curr):
-                if curr not in visited:
-                    visited[succ] = visited[curr] + 1
-                    front.append(succ)
-        
-        return visited
-    
-    all_paths = [_search_path(i) for i in get_successors(graph, node)]
+    init_path = {node: 0}
+    all_paths = _search_path(node, init_path)
+
     path_sets = [set(i.keys()) for i in all_paths]
     common_nodes = set.intersection(*path_sets)
-    #print('Common: ', all_paths)
 
     if not common_nodes:
         return node
