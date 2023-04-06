@@ -38,18 +38,18 @@ class PreprocessTransformer(ast.NodeTransformer):
     def visit_Name(self, node: ast.Name) -> VRet:
         self.id_gen.add_used(node.id)
 
-        return node
+        return self.generic_visit(node)
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> VRet:
         self.id_gen.add_used(node.name)
 
         node.body.append(ast.Return(ast.Constant(None)))
-        return node
+        return self.generic_visit(node)
     
     def visit_ClassDef(self, node: ast.ClassDef) -> VRet:
         self.id_gen.add_used(node.name)
 
-        return node
+        return self.generic_visit(node)
 
     def visit_AugAssign(self, node: ast.AugAssign) -> VRet:
         return self.visit(ast.Assign(
@@ -115,24 +115,24 @@ class PreprocessTransformer(ast.NodeTransformer):
             for name, rhs in zip(aliases, packed_rhs)
         ]
 
-        return [init] + assigns
+        return [self.generic_visit(init)] + assigns
     
     def _mutate_assign(self, var: ast.expr, val: ast.expr):
 
         # assignment to a subscript
         if isinstance(var, ast.Subscript):
-            return ast.Expr(ast.Call(
+            return self.generic_visit(ast.Expr(ast.Call(
                 ast.Attribute(var.value, '__setitem__'),
                 [self._parse_slice(var.slice), val],
                 []
-            ))
+            )))
         
         # packed assignment
         if isinstance(var, ast.List) or isinstance(var, ast.Tuple):
             name = self.id_gen.throwaway()
             init = ast.Assign([ast.Name(name)], val, lineno=0)
             return [
-                init,
+                self.generic_visit(init),
                 *[
                     self._mutate_assign(
                         v,
@@ -141,11 +141,7 @@ class PreprocessTransformer(ast.NodeTransformer):
                 ]
             ]
         
-        # register used name
-        if isinstance(var, ast.Name):
-            self.id_gen.add_used(var.id)
-        
-        return ast.Assign([var], val, lineno=0)
+        return self.generic_visit(ast.Assign([var], val, lineno=0))
     
     def _parse_slice(self, slice: ast.expr) -> ast.expr:
         if isinstance(slice, ast.Slice):

@@ -28,25 +28,35 @@ def foo():
             print(123)
             if a == 20:
                 continue
+                import numpy as np
     b = 3
     print(b)
+
+foo()
 """
 
 
 class ControlFlowGraphTest(unittest.TestCase):
 
-    def test_simple_return(self):
+    def test_simple_linear(self):
         tree, id_gen = singleline.analysis.preprocess(SIMPLE_FUNC)
+        singleline.analysis.control_flow_pass(tree)
+
+        graph = tree.graph
+
+        last = singleline.misc.get_last_convergence(graph, tree)
+        for i, ans in zip(last.bundle, ['b=3', 'print(b)']):
+            self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
+
+    def test_complex_func(self):
+        tree, id_gen = singleline.analysis.preprocess(COMPLEX_FUNC)
         singleline.analysis.control_flow_pass(tree)
 
         print(id_gen.invalid_pool)
 
         graph = tree.graph
-        singleline.transform.clean_up_graph(graph)
 
-        last = singleline.transform.get_last_convergence(graph, tree)
-        for i, ans in zip(last.bundle, ['b=3', 'print(b)']):
-            self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
+        last = singleline.misc.get_last_convergence(graph, tree)
 
 
 if __name__ == '__main__':
