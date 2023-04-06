@@ -7,6 +7,9 @@ from .plot import plot_graph
 
 
 SIMPLE_FUNC = """
+def foo():
+    a = 2
+
 a = a + 1
 if a == 2:
     a += 2
@@ -17,18 +20,19 @@ print(b)
 """
 
 COMPLEX_FUNC = """
-a = a + 1
-if a == 2:
-    return 'television'
-elif a == 3:
-    for i in range(10):
-        if i > 5:
-            break
-        print(123)
-        if a == 20:
-            continue
-b = 3
-print(b)
+def foo():
+    a = a + 1
+    if a == 2:
+        return 'television'
+    elif a == 3:
+        for i in range(10):
+            if i > 5:
+                break
+            print(123)
+            if a == 20:
+                continue
+    b = 3
+    print(b)
 """
 
 

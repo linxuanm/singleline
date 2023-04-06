@@ -27,6 +27,7 @@ class PreprocessTransformer(ast.NodeTransformer):
     - Rewriting augmented assignments (e.g., `a += b` to `a = a + b`)
     - Unwrapping tuple assignments
     - Unwrapping `import` statements
+    - Appending `return None` to all functions
     """
 
     used_id: Set[str]
@@ -35,6 +36,10 @@ class PreprocessTransformer(ast.NodeTransformer):
     def __init__(self):
         self.used_id = set()
         self.id_gen = IdentifierGenerator(self.used_id)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> VRet:
+        node.body.append(ast.Return(ast.Constant(None)))
+        return node
 
     def visit_AugAssign(self, node: ast.AugAssign) -> VRet:
         return self.visit(ast.Assign(
