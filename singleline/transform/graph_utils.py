@@ -43,35 +43,38 @@ def get_last_convergence(graph: nx.classes.DiGraph, node: ast.AST) -> ast.AST:
     If no successors converge, returns the given node.
 
     TODO: find a better algorithm for this O(N^2) abomination.
-    """ 
+    """
+
+    def _merge_path(a: Dict[ast.AST, int], b: Dict[ast.AST, int]) -> Dict[ast.AST, int]:
+        return {k: max(a[k], b[k]) for k in a if k in b}
     
-    def _search_path(node: ast.AST, path: Dict[ast.AST, int]) -> List[Dict[ast.AST, int]]:
-        succs = list(get_successors(graph, node))
+    def _search_path(node: ast.AST, path: Dict[ast.AST, int]) -> Dict[ast.AST, int]:
+
+        # Get all successors and remove visited nodes (not necessary right now,
+        # but in case the CFG becomes cyclic in the future due to some new encoding
+        # requirement on the target language side).
+        succs = set(get_successors(graph, node)) - path.keys()
         if not succs:
-            return [path]
+            return path
 
-        branches = []
+        result = None
         for succ in succs:
-            if succ in path: # sanity check for cyclic CFG (maybe in future versions)
-                continue
-
             new_path = {**path}
             new_path[succ] = path[node] + 1
-            branches.append(_search_path(succ, new_path))
+
+            branch_path = _search_path(succ, new_path)
+            if result is None:
+                result = branch_path
+            else:
+                result = _merge_path(result, branch_path)
         
-        return sum(branches, [])
+        return result
     
     init_path = {node: 0}
-    all_paths = _search_path(node, init_path)
-
-    path_sets = [set(i.keys()) for i in all_paths]
-    common_nodes = set.intersection(*path_sets)
+    common_nodes = _search_path(node, init_path)
 
     if not common_nodes:
         return node
     
-    def node_depth(k):
-        return max(d[k] for d in all_paths)
-    
-    last_common = max(common_nodes, key=node_depth)
+    last_common = max(common_nodes, key=common_nodes.__getitem__)
     return last_common

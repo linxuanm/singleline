@@ -63,6 +63,19 @@ class NodeBundle:
                 res.append(x)
 
         return res
+    
+
+class DummyBundle(NodeBundle):
+    """
+    A dummy bundle that is non-empty but ignored during transpiling. Used
+    as a placeholder node during graph construction and analysis (e.g., as
+    the `return` path of a loop). An instantiation of this class will not
+    be picked up as an empty bundle and get removed/optimized during graph
+    rewrite.
+    """
+
+    def is_empty(self) -> bool:
+        return False
 
 
 class ControlFlowGraph:
@@ -190,7 +203,7 @@ class ControlFlowGraph:
         # no outgoing edges to tell the graph rewriter that an interruption
         # may occur.
         if has_ret:
-            dummy_node = NodeBundle()
+            dummy_node = DummyBundle()
             self.graph.add_node(dummy_node)
             self.graph.add_edge(node, dummy_node, label=CFGLabels.RET_FLAG)
 
