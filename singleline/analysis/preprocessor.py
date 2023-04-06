@@ -30,15 +30,25 @@ class PreprocessTransformer(ast.NodeTransformer):
     - Appending `return None` to all functions
     """
 
-    used_id: Set[str]
     id_gen: IdentifierGenerator
 
     def __init__(self):
-        self.used_id = set()
-        self.id_gen = IdentifierGenerator(self.used_id)
+        self.id_gen = IdentifierGenerator(set())
+
+    def visit_Name(self, node: ast.Name) -> VRet:
+        self.id_gen.add_used(node.id)
+
+        return node
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> VRet:
+        self.id_gen.add_used(node.name)
+
         node.body.append(ast.Return(ast.Constant(None)))
+        return node
+    
+    def visit_ClassDef(self, node: ast.ClassDef) -> VRet:
+        self.id_gen.add_used(node.name)
+
         return node
 
     def visit_AugAssign(self, node: ast.AugAssign) -> VRet:
@@ -130,6 +140,10 @@ class PreprocessTransformer(ast.NodeTransformer):
                     ) for idx, v in enumerate(var.elts)
                 ]
             ]
+        
+        # register used name
+        if isinstance(var, ast.Name):
+            self.id_gen.add_used(var.id)
         
         return ast.Assign([var], val, lineno=0)
     

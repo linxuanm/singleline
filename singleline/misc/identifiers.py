@@ -15,18 +15,17 @@ def _to_excel_name(num: int) -> str:
 class IdentifierGenerator:
 
     counter: int
-    obfuscate: bool
+    prepend: bool
     invalid_pool: Set[str]
 
-    def __init__(self, invalid_pool: Set[str], obfuscate: bool = False):
+    def __init__(self, invalid_pool: Set[str], prepend: bool = True):
         """
         invalid_pool: a reference to the (currently visited) set of identifier
         names that are used.
-        obfuscate: whether to generate short, non-sensical names that disregards
-        the usage for it.
+        prepend: whether to prepend an underscore to all generated names.
         """
         self.invalid_pool = invalid_pool
-        self.obfuscate = obfuscate
+        self.prepend = prepend
         self.counter = 1
 
     def throwaway(self):
@@ -37,6 +36,9 @@ class IdentifierGenerator:
 
         return '_'
     
+    def add_used(self, name):
+        self.invalid_pool.add(name)
+    
     def get_name(self):
         # TODO: respect name generation context for meaningful names
         name = _to_excel_name(self.counter)
@@ -45,4 +47,7 @@ class IdentifierGenerator:
             name = _to_excel_name(self.counter)
         
         self.counter += 1
-        return '_' + name
+        final_name = '_' + name
+
+        self.invalid_pool.add(final_name)
+        return final_name

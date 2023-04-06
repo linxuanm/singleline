@@ -140,7 +140,7 @@ class ControlFlowGraph:
             
             prev = curr_out
 
-        # Dummy control-flow node.
+        # Empty control-flow node as body.
         if first is None:
             node = NodeBundle()
             self.graph.add_node(node)
