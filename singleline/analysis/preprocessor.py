@@ -52,6 +52,8 @@ class PreprocessTransformer(ast.NodeTransformer):
         return self.generic_visit(node)
 
     def visit_AugAssign(self, node: ast.AugAssign) -> VRet:
+        # `self.visit` is used instead of `self.generic_visit` because the
+        # resulting `ast.Assign` node might need to undergo more transformations
         return self.visit(ast.Assign(
             [node.target],
             ast.BinOp(node.target, node.op, node.value),
@@ -117,6 +119,7 @@ class PreprocessTransformer(ast.NodeTransformer):
 
         return [self.generic_visit(init)] + assigns
     
+    # nodes returned from this does not need to be visited
     def _mutate_assign(self, var: ast.expr, val: ast.expr):
 
         # assignment to a subscript
