@@ -44,8 +44,8 @@ class ControlFlowGraphTest(unittest.TestCase):
 
         graph = tree.graph
 
-        last = singleline.misc.get_last_convergence(graph, tree)
-        for i, ans in zip(last.bundle, ['b=3', 'print(b)']):
+        common = singleline.misc.get_all_convergence(graph, tree)
+        for i, ans in zip(common[-1].bundle, ['b=3', 'print(b)']):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
 
     def test_complex_func(self):
@@ -54,8 +54,9 @@ class ControlFlowGraphTest(unittest.TestCase):
 
         graph: nx.classes.DiGraph = tree.body[0].graph
 
-        last = singleline.misc.get_last_convergence(graph, tree.body[0])
-        for i, ans in zip(last.bundle, ['b=3', 'print(b)']):
+        common = singleline.misc.get_all_convergence(graph, tree.body[0])
+        print(common)
+        for i, ans in zip(common[-1].bundle, ['b=3', 'print(b)']):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
 
 

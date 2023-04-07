@@ -1,8 +1,9 @@
 import ast
 import networkx as nx
-from typing import Dict
+from typing import Dict, List
 
 from .graph_nodes import *
+from .types import CFNode
 
 
 def clean_up_graph(graph: nx.classes.DiGraph) -> None:
@@ -34,11 +35,11 @@ def get_successors(graph: nx.classes.DiGraph, node: ast.AST):
     )
 
 
-def get_last_convergence(graph: nx.classes.DiGraph, node: ast.AST) -> ast.AST:
+def get_all_convergence(graph: nx.classes.DiGraph, node: ast.AST) -> List[CFNode]:
     """
     Given a node in a graph, this function searches through all its successors
     to see if they converge back into a single node after some point. Returns
-    the last such node.
+    all such nodes.
 
     If no successors converge, returns the given node.
 
@@ -72,9 +73,8 @@ def get_last_convergence(graph: nx.classes.DiGraph, node: ast.AST) -> ast.AST:
     
     init_path = {node: 0}
     common_nodes = _search_path(node, init_path)
+    common_nodes.pop(node)
 
-    if not common_nodes:
-        return node
-    
-    last_common = max(common_nodes, key=common_nodes.__getitem__)
-    return last_common
+    sequence = list(common_nodes.keys())
+    seq_ordered = sorted(sequence, key=common_nodes.__getitem__)
+    return seq_ordered

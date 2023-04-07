@@ -2,12 +2,12 @@ import ast
 import networkx as nx
 from typing import List, Tuple, Union
 
-from ..misc.types import VRet
+from ..misc.types import CFNode
 from ..misc.graph_utils import NodeBundle, DummyBundle, clean_up_graph, CFGLabels
 from .interrupt import has_interrupt
 
 
-def control_flow_pass(node: Union[ast.Module, ast.FunctionDef]):
+def control_flow_pass(node: Union[ast.Module, ast.FunctionDef]) -> None:
     """
     Populates the `graph` attribute of a module or function with the CFG
     of its content with an instance of `nx.DiGraph`.
@@ -27,10 +27,10 @@ class ControlFlowGraph:
 
     graph: nx.classes.DiGraph
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.graph = nx.classes.DiGraph()
     
-    def build_cfg(self, head: ast.AST, code: List[ast.AST]):
+    def build_cfg(self, head: ast.AST, code: List[ast.AST]) -> None:
         # `head` is an `ast.AST` that represents the container for `code`. It is
         # used as an entry point to the graph.
 
@@ -38,7 +38,7 @@ class ControlFlowGraph:
         top, _ = self._analysis_pass(code)
         self.graph.add_edge(head, top)
 
-    def _analysis_pass(self, code: List[ast.AST]) -> Tuple[ast.AST, List[ast.AST]]:
+    def _analysis_pass(self, code: List[ast.AST]) -> Tuple[CFNode, List[CFNode]]:
         """
         Builds the control flow graph for a portion of code.
 
@@ -89,7 +89,7 @@ class ControlFlowGraph:
         
         return (first, [] if interrupt else prev)
     
-    def _expand_single_node(self, node) -> Tuple[ast.AST, List[ast.AST]]:
+    def _expand_single_node(self, node) -> Tuple[CFNode, CFNode]:
         """
         Adds the control-flow graph of `node` as a separate, disconnected
         sub-graph to `self.graph`, and returns the entry node and list of
@@ -114,7 +114,7 @@ class ControlFlowGraph:
         
         raise NotImplementedError(type(node))
         
-    def _build_loop_graph(self, node: ast.AST) -> Tuple[ast.AST, ast.AST]:
+    def _build_loop_graph(self, node: ast.AST) -> Tuple[CFNode, CFNode]:
         self.graph.add_node(node)
         has_break, has_ret = has_interrupt(node.body)
 
