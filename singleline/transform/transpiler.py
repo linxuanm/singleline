@@ -2,6 +2,7 @@ import ast
 import networkx as nx
 
 from ..misc.identifiers import IdentifierGenerator
+from ..misc.graph_utils import get_last_convergence
 
 
 class GraphTranspiler:
@@ -24,9 +25,6 @@ class GraphTranspiler:
         """
         
         assert node in self.graph
-
-        # Flatten the nodes into layers to determine execution path coercion.
-        layers = []
 
         exprs = []
         while node is not None:
