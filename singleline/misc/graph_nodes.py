@@ -1,0 +1,64 @@
+import ast
+from enum import Enum, auto
+from typing import List
+
+
+class CFGLabels(Enum):
+    """
+    An enumeration of all possible labels in case a branching occurs at
+    a node in the CFG.
+
+    For instance, the `ast.If` node can have two outgoing edges labeled
+    as `CFGLabels.IF` and `CFGLabels.ELSE`.
+    """
+
+    IF = auto() # `if` statement
+    ELSE = auto() # `if` statement
+    RET_FLAG = auto() # loops
+    IGNORE = auto() # loop interior, ignore during interrupt tracing
+
+
+# A hashable wrapper for `List[ast.AST]`.
+# TODO: fix the types that involves `NodeBundle` (currently incorrect)
+class NodeBundle:
+
+    bundle: List[ast.AST]
+
+    def __init__(self, bundle: List[ast.AST] = None):
+        if bundle is None: bundle = []
+
+        self.bundle = bundle
+
+    def append(self, node: ast.AST):
+        self.bundle.append(node)
+
+    def flatten(self):
+        self.bundle = NodeBundle._flatten(self.bundle)
+
+    def is_empty(self) -> bool:
+        return len(self.bundle) == 0
+
+    @staticmethod
+    def _flatten(xs: any) -> List[any]:
+        res = []
+        for x in xs:
+            if isinstance(x, list):
+                res.extend(NodeBundle.flatten(x))
+            else:
+                res.append(x)
+
+        return res
+    
+
+class DummyBundle(NodeBundle):
+    """
+    A dummy bundle that is non-empty but ignored during transpiling. Used
+    as a placeholder node during graph construction and analysis (e.g., as
+    the `return` path of a loop). An instantiation of this class will not
+    be picked up as an empty bundle and get removed/optimized during graph
+    rewrite.
+    """
+
+    def is_empty(self) -> bool:
+        return False
+    
