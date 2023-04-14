@@ -1,6 +1,6 @@
 import ast
 import networkx as nx
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from .graph_nodes import *
 from .types import CFNode
@@ -35,7 +35,11 @@ def get_successors(graph: nx.classes.DiGraph, node: ast.AST):
     )
 
 
-def get_all_convergence(graph: nx.classes.DiGraph, node: ast.AST) -> List[CFNode]:
+def get_all_convergence(
+    graph: nx.classes.DiGraph,
+    node: ast.AST,
+    end: Union[ast.AST, None] = None
+) -> List[CFNode]:
     """
     Given a node in a graph, this function searches through all its successors
     to see if they converge back into a single node after some point. Returns
@@ -54,7 +58,7 @@ def get_all_convergence(graph: nx.classes.DiGraph, node: ast.AST) -> List[CFNode
         # Get all successors and remove visited nodes (not necessary right now,
         # but in case the CFG becomes cyclic in the future due to some new encoding
         # requirement on the target language side).
-        succs = set(get_successors(graph, node)) - path.keys()
+        succs = set(get_successors(graph, node)) - path.keys() - {end}
         if not succs:
             return path
 
