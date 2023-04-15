@@ -79,8 +79,6 @@ def get_all_convergence(
             if succ != stop:
                 new_path[succ] = path[node] + 1
                 new_path = _search_path(succ, new_path)
-            else:
-                print(new_path)
 
             if result is None:
                 result = new_path
@@ -88,6 +86,9 @@ def get_all_convergence(
                 result = _merge_path(result, new_path)
         
         return result
+    
+    if node == stop:
+        return []
     
     init_path = {node: 0}
     common_nodes = _search_path(node, init_path)

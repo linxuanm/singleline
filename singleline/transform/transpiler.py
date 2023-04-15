@@ -74,7 +74,7 @@ class GraphTranspiler:
             else_branch = get_next_from_label(self.graph, node, CFGLabels.ELSE)
             
             if_code = self.transpile(if_branch, stop)
-            else_code = self.transpile(else_branch, stop, True)
+            else_code = self.transpile(else_branch, stop)
             cond_code = ast.unparse(node.test)
 
             ctx.add(
