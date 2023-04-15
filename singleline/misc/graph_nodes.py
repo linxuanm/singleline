@@ -15,6 +15,7 @@ class CFGLabels(Enum):
     IF = auto() # `if` statement
     ELSE = auto() # `if` statement
     RET_FLAG = auto() # loops
+    CONTENT = auto() # content of `ast.FunctionDef` or `ast.Module`
     IGNORE = auto() # loop interior, ignore during interrupt tracing
 
 

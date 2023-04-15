@@ -36,7 +36,7 @@ class ControlFlowGraph:
 
         self.graph.add_node(head)
         top, _ = self._analysis_pass(code)
-        self.graph.add_edge(head, top)
+        self.graph.add_edge(head, top, label=CFGLabels.CONTENT)
 
     def _analysis_pass(self, code: List[ast.AST]) -> Tuple[CFNode, List[CFNode]]:
         """

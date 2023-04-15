@@ -12,9 +12,10 @@ from .transpile_context import ScopedExprManager
 def transpile(
     graph: nx.classes.DiGraph,
     id_gen: IdentifierGenerator,
-    entry: CFNode,
+    header: CFNode,
     stop: Union[CFNode, None] = None
 ) -> str:
+    entry = get_next_from_label(graph, header, CFGLabels.CONTENT)
     transpiler = GraphTranspiler(id_gen, graph)
     return transpiler.transpile(entry, stop)
 
@@ -71,7 +72,7 @@ class GraphTranspiler:
         elif isinstance(node, ast.If):
             if_branch = get_next_from_label(self.graph, node, CFGLabels.IF)
             else_branch = get_next_from_label(self.graph, node, CFGLabels.ELSE)
-            print(if_branch, else_branch, stop)
+            
             if_code = self.transpile(if_branch, stop)
             else_code = self.transpile(else_branch, stop)
             cond_code = ast.unparse(node.test)

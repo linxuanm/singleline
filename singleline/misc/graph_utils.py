@@ -85,7 +85,6 @@ def get_all_convergence(
     
     init_path = {node: 0}
     common_nodes = _search_path(node, init_path)
-    common_nodes.pop(node)
 
     sequence = list(common_nodes.keys())
     seq_ordered = sorted(sequence, key=common_nodes.__getitem__)
