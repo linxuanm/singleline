@@ -28,11 +28,19 @@ def clean_up_graph(graph: nx.classes.DiGraph) -> None:
     graph.remove_nodes_from(empty_nodes)
 
 
-def get_successors(graph: nx.classes.DiGraph, node: ast.AST):
+def get_successors(graph: nx.classes.DiGraph, node: CFNode):
     return (
         i for i in graph.successors(node)
         if graph[node][i].get('label') != CFGLabels.IGNORE
     )
+
+
+def get_next_from_label(graph: nx.classes.DiGraph, node: CFNode, label: CFGLabels):
+    out_edges = graph.edges(node, data=True)
+    edges = [v for _, v, attr in out_edges if attr.get('label') == label]
+
+    assert len(edges) == 1
+    return edges[0]
 
 
 def get_all_convergence(

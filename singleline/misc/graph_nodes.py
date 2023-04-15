@@ -37,6 +37,11 @@ class NodeBundle:
 
     def is_empty(self) -> bool:
         return len(self.bundle) == 0
+    
+    def __repr__(self) -> str:
+        return '<NodeBundle: [{}]>'.format(
+            ', '.join(ast.unparse(i) for i in self.bundle)
+        )
 
     @staticmethod
     def _flatten(xs: any) -> List[any]:

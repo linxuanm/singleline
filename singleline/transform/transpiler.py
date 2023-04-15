@@ -3,8 +3,8 @@ import networkx as nx
 from typing import Union
 
 from ..misc.identifiers import IdentifierGenerator
-from ..misc.graph_utils import get_all_convergence
-from ..misc.graph_nodes import NodeBundle
+from ..misc.graph_utils import get_all_convergence, get_next_from_label
+from ..misc.graph_nodes import NodeBundle, CFGLabels
 from ..misc.types import CFNode
 from .transpile_context import ScopedExprManager
 
@@ -43,6 +43,10 @@ class GraphTranspiler:
         ctx = ScopedExprManager()
         sep = get_all_convergence(self.graph, node, stop)
 
+        # Empty bundle (e.g., empty `else` block).
+        if not sep:
+            return '()'
+
         # Iterates through all nodes and convert until reaching the next one.
         # The `stop` node is needed to execute `get_all_convergence` inside
         # each branch in sub-statements.
@@ -65,7 +69,17 @@ class GraphTranspiler:
 
         # `ast.If` is the only node that respects `try_ret`.
         elif isinstance(node, ast.If):
-            print('123: ', self.graph[node])
+            if_branch = get_next_from_label(self.graph, node, CFGLabels.IF)
+            else_branch = get_next_from_label(self.graph, node, CFGLabels.ELSE)
+            print(if_branch, else_branch, stop)
+            if_code = self.transpile(if_branch, stop)
+            else_code = self.transpile(else_branch, stop)
+            cond_code = ast.unparse(node.test)
+
+            ctx.add(
+                f'{if_code} if {cond_code} else {else_code}',
+                try_ret
+            )
 
     def _transpile_single(self, stmt: ast.AST, ctx: ScopedExprManager) -> None:
         if isinstance(stmt, ast.Assign):
@@ -78,7 +92,7 @@ class GraphTranspiler:
 
         elif isinstance(stmt, ast.Return):
             code = stmt.value
-            ctx.add_ret(code)
+            ctx.add(code, True)
 
         else:
             ctx.add(ast.unparse(stmt))

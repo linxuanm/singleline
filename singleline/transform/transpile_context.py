@@ -30,21 +30,21 @@ class ScopedExprManager:
         self.exprs = []
         self.has_ret = False
 
-    def add(self, expr: str):
-        if self.has_ret:
-            raise ValueError(
-                'This tuple layer is already sealed with a return value, '
-                'and cannot be mutated further'
-            )
-
-        self.exprs.append(expr)
-    
-    def add_ret(self, expr: str):
-        if self.has_ret:
-            raise ValueError('This tuple layer is already marked with a return value')
+    def add(self, expr: str, should_ret: bool = False):
+        if not should_ret:
+            if self.has_ret:
+                raise ValueError(
+                    'This tuple layer is already sealed with a return value, '
+                    'and cannot be mutated further'
+                )
+            self.exprs.append(expr)
         
-        self.exprs.append(expr)
-        self.has_ret = True
+        else:
+            if self.has_ret:
+                raise ValueError('This tuple layer is already marked with a return value')
+            
+            self.exprs.append(expr)
+            self.has_ret = True
 
     def build(self) -> str:
         inner = ', '.join(self.exprs)
