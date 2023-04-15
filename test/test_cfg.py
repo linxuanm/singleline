@@ -55,7 +55,6 @@ class ControlFlowGraphTest(unittest.TestCase):
         graph: nx.classes.DiGraph = tree.body[0].graph
 
         common = singleline.misc.get_all_convergence(graph, tree.body[0])
-        print(common)
         for i, ans in zip(common[-1].bundle, ['b=3', 'print(b)']):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
 

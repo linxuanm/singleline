@@ -50,10 +50,10 @@ def get_all_convergence(
     TODO: find a better algorithm for this O(N^2) abomination.
     """
 
-    def _merge_path(a: Dict[ast.AST, int], b: Dict[ast.AST, int]) -> Dict[ast.AST, int]:
+    def _merge_path(a: Dict[CFNode, int], b: Dict[CFNode, int]) -> Dict[CFNode, int]:
         return {k: max(a[k], b[k]) for k in a if k in b}
     
-    def _search_path(node: ast.AST, path: Dict[ast.AST, int]) -> Dict[ast.AST, int]:
+    def _search_path(node: CFNode, path: Dict[CFNode, int]) -> Dict[CFNode, int]:
 
         # Get all successors and remove visited nodes (not necessary right now,
         # but in case the CFG becomes cyclic in the future due to some new encoding

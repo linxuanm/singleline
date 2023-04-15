@@ -1,5 +1,6 @@
 import ast
 import networkx as nx
+from typing import Union
 
 from ..misc.identifiers import IdentifierGenerator
 from ..misc.graph_utils import get_all_convergence
@@ -22,19 +23,23 @@ class GraphTranspiler:
         self.id_gen = id_gen
         self.graph = graph
 
-    def transpile(self, node: CFNode) -> str:
+    def transpile(self, node: CFNode, stop: Union[CFNode, None]) -> str:
         """
         Transpiles a code given a node in the CFG.
         """
         
         assert node in self.graph
 
-        curr = node
         ctx = ScopedExprManager()
-        sep = get_all_convergence(self.graph, node)
-        for i in sep:
-            self._transpile_node(curr, ctx)
-            curr = i
+        sep = get_all_convergence(self.graph, node, stop)
+
+        # Iterates through all nodes and convert until reaching the next one.
+        # The `stop` node is needed to execute `get_all_convergence` inside
+        # each branch in sub-statements.
+        for start, stop in zip(sep, sep[1 :]):
+            self._transpile_node(start, stop, ctx)
+
+        self._transpile_node(sep[-1], stop, ctx)
 
     def _transpile_node(self, node: CFNode, ctx: ScopedExprManager) -> None:
         if isinstance(node, NodeBundle):
