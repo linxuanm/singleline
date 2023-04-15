@@ -46,7 +46,7 @@ def get_next_from_label(graph: nx.classes.DiGraph, node: CFNode, label: CFGLabel
 def get_all_convergence(
     graph: nx.classes.DiGraph,
     node: ast.AST,
-    end: Union[ast.AST, None] = None
+    stop: Union[ast.AST, None] = None
 ) -> List[CFNode]:
     """
     Given a node in a graph, this function searches through all its successors
@@ -66,25 +66,33 @@ def get_all_convergence(
         # Get all successors and remove visited nodes (not necessary right now,
         # but in case the CFG becomes cyclic in the future due to some new encoding
         # requirement on the target language side).
-        succs = set(get_successors(graph, node)) - path.keys() - {end}
+        succs = set(get_successors(graph, node)) - path.keys()
         if not succs:
             return path
 
         result = None
         for succ in succs:
             new_path = {**path}
-            new_path[succ] = path[node] + 1
 
-            branch_path = _search_path(succ, new_path)
-            if result is None:
-                result = branch_path
+            # `stop` check must be here to make sure that reaching the `stop` node
+            # merges the other paths with this path (which is truncated to `stop`).
+            if succ != stop:
+                new_path[succ] = path[node] + 1
+                new_path = _search_path(succ, new_path)
             else:
-                result = _merge_path(result, branch_path)
+                print(new_path)
+
+            if result is None:
+                result = new_path
+            else:
+                result = _merge_path(result, new_path)
         
         return result
     
     init_path = {node: 0}
     common_nodes = _search_path(node, init_path)
+
+    assert stop not in common_nodes
 
     sequence = list(common_nodes.keys())
     seq_ordered = sorted(sequence, key=common_nodes.__getitem__)
