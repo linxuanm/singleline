@@ -7,13 +7,14 @@ from .plot import plot_graph
 
 
 SIMPLE_FUNC = """
+a = 1
 a = a + 1
 if a == 2:
     a += 2
 elif a == 3:
-    abc()
+    print('nope')
 b = 3
-print(b)
+print(a, b)
 """
 
 COMPLEX_FUNC = """
@@ -45,7 +46,7 @@ class ControlFlowGraphTest(unittest.TestCase):
         graph = tree.graph
 
         common = singleline.misc.get_all_convergence(graph, tree)
-        for i, ans in zip(common[-1].bundle, ['b=3', 'print(b)']):
+        for i, ans in zip(common[-1].bundle, ['b=3', 'print(a,b)']):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
 
     def test_complex_func(self):
@@ -57,6 +58,14 @@ class ControlFlowGraphTest(unittest.TestCase):
         common = singleline.misc.get_all_convergence(graph, tree.body[0])
         for i, ans in zip(common[-1].bundle, ['b=3', 'print(b)']):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
+
+    def test_simple_transpile(self):
+        tree, id_gen = singleline.analysis.preprocess(SIMPLE_FUNC)
+        singleline.analysis.control_flow_pass(tree)
+
+        graph = tree.graph
+        code = singleline.transform.transpile(graph, id_gen, tree, None)
+        print(code)
 
 
 if __name__ == '__main__':

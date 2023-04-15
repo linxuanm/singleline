@@ -9,6 +9,16 @@ from ..misc.types import CFNode
 from .transpile_context import ScopedExprManager
 
 
+def transpile(
+    graph: nx.classes.DiGraph,
+    id_gen: IdentifierGenerator,
+    entry: CFNode,
+    stop: Union[CFNode, None] = None
+) -> str:
+    transpiler = GraphTranspiler(id_gen, graph)
+    return transpiler.transpile(entry, stop)
+
+
 class GraphTranspiler:
     """
     This class is responsible for transpiling a sub-graph into a single-line
@@ -39,12 +49,23 @@ class GraphTranspiler:
         for start, stop in zip(sep, sep[1 :]):
             self._transpile_node(start, stop, ctx)
 
-        self._transpile_node(sep[-1], stop, ctx)
+        self._transpile_node(sep[-1], stop, ctx, True)
+        return ctx.build()
 
-    def _transpile_node(self, node: CFNode, ctx: ScopedExprManager) -> None:
+    def _transpile_node(
+        self,
+        node: CFNode,
+        stop: Union[CFNode, None],
+        ctx: ScopedExprManager,
+        try_ret: bool = False
+    ) -> None:
         if isinstance(node, NodeBundle):
             for stmt in node.bundle:
                 self._transpile_single(stmt, ctx)
+
+        # `ast.If` is the only node that respects `try_ret`.
+        elif isinstance(node, ast.If):
+            print('123: ', self.graph[node])
 
     def _transpile_single(self, stmt: ast.AST, ctx: ScopedExprManager) -> None:
         if isinstance(stmt, ast.Assign):
@@ -59,4 +80,5 @@ class GraphTranspiler:
             code = stmt.value
             ctx.add_ret(code)
 
-        ctx.add(ast.unparse(stmt))
+        else:
+            ctx.add(ast.unparse(stmt))
