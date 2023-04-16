@@ -31,6 +31,8 @@ class ScopedExprManager:
         self.has_ret = False
 
     def add(self, expr: str, should_ret: bool = False):
+        assert isinstance(expr, str)
+        
         if not should_ret:
             if self.has_ret:
                 raise ValueError(

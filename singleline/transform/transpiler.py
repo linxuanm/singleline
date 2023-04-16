@@ -93,13 +93,18 @@ class GraphTranspiler:
 
         elif isinstance(stmt, ast.Return):
             code = stmt.value
-            ctx.add(code)
+            ctx.add(ast.unparse(code), True)
 
         elif isinstance(stmt, ast.Raise):
             ctx.add(f'(_ for i in ()).throw({ast.unparse(stmt.exc)})')
 
         elif isinstance(stmt, ast.FunctionDef):
-            raise NotImplementedError
+            body = transpile(stmt.graph, self.id_gen, stmt)
+
+            # some really hacky transpiling
+            exp = ast.Lambda(stmt.args, ast.Tuple([]))
+            code = ast.unparse(exp)[: -2] + body
+            ctx.add(f'{stmt.name} := {code}')
 
         else:
             ctx.add(ast.unparse(stmt))
