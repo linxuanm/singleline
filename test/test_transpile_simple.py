@@ -157,6 +157,86 @@ SIMPLE_TESTS = {
 }
 
 
+ASSERT_TESTS = {
+    format("""
+    def power(base, exponent):
+        if exponent == 0:
+            return 1
+        else:
+            return base * power(base, exponent - 1)
+
+    def square(n):
+        return power(n, 2)
+
+    def cube(n):
+        return power(n, 3)
+
+    result = square(4) + cube(2)
+    assert result == 24
+    """): False,
+
+    format("""
+    def double(x):
+        return x * 2
+
+    def triple(x):
+        return x * 3
+
+    def apply_function(f, x):
+        return f(x)
+
+    assert apply_function(double, 5) == 10
+    assert apply_function(triple, 5) == 15
+    """): False,
+
+    format("""
+    def square(x):
+        return x * x
+
+    def cube(x):
+        return x * x * x
+
+    def test_square_and_cube():
+        assert square(4) == 16
+        assert cube(3) == 27
+        if square(3) > 10:
+            assert cube(2) == 9
+
+    test_square_and_cube()
+    """): True,
+
+    format("""
+    def add(x, y):
+        return x + y
+
+    def subtract(x, y):
+        return x - y
+
+    def test_operations():
+        assert add(5, 3) == 8
+        if subtract(7, 4) == 3:
+            assert add(1, 1) == 3
+
+    test_operations()
+    """): True,
+
+    format("""
+    def multiply(x, y):
+        return x * y
+
+    def divide(x, y):
+        return x / y
+
+    def test_multiply_and_divide():
+        assert multiply(3, 4) == 12
+        assert divide(12, 3) == 4
+        if divide(15, 5) == 3:
+            assert multiply(2, 2) == 6
+
+    test_multiply_and_divide()
+    """): True
+}
+
 
 class ControlFlowGraphTest(unittest.TestCase):
 
