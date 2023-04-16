@@ -3,7 +3,7 @@ import unittest
 import networkx as nx
 
 from .context import singleline
-from .plot import plot_graph
+from .utils import plot_graph
 
 
 SIMPLE_FUNC = """
@@ -65,7 +65,8 @@ class ControlFlowGraphTest(unittest.TestCase):
 
         graph = tree.graph
         code = singleline.transform.transpile(graph, id_gen, tree, None)
-        print(code)
+
+        # TODO: finish this
 
 
 if __name__ == '__main__':

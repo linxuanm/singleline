@@ -1,11 +1,13 @@
 # Testing `ast.If` and `ast.FunctionDef` transpilation.
+import io
 import ast
 import unittest
 import textwrap
+import contextlib
 import networkx as nx
 
 from .context import singleline
-from .plot import plot_graph
+from .utils import plot_graph
 
 
 def format(code):
@@ -32,7 +34,7 @@ SIMPLE_TESTS = {
             return "odd"
 
     print(check_even_odd(math.ceil(3.5)))
-    """): "odd",
+    """): "even",
 
     format("""
     def get_grade(score):
@@ -82,7 +84,7 @@ SIMPLE_TESTS = {
         print("*" * size)
 
     print_triangle(3)
-    """): " *\n**\n***",
+    """): "*\n**\n***",
 
     format("""
     def compare_numbers(a, b, c):
@@ -165,8 +167,12 @@ class ControlFlowGraphTest(unittest.TestCase):
 
             graph = tree.graph
             code = singleline.transform.transpile(graph, id_gen, tree)
-            
-            print(code)
+
+            sout = io.StringIO()
+            with contextlib.redirect_stdout(sout):
+                exec(code, {})
+
+            self.assertEqual(sout.getvalue().strip(), expect)
 
 
 if __name__ == '__main__':
