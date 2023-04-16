@@ -95,5 +95,11 @@ class GraphTranspiler:
             code = stmt.value
             ctx.add(code)
 
+        elif isinstance(stmt, ast.Raise):
+            ctx.add(f'(_ for i in ()).throw({ast.unparse(stmt.exc)})')
+
+        elif isinstance(stmt, ast.FunctionDef):
+            raise NotImplementedError
+
         else:
             ctx.add(ast.unparse(stmt))

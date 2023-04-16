@@ -7,12 +7,12 @@ from .plot import plot_graph
 
 
 SIMPLE_FUNC = """
-a = 1
+a = int(input())
 a = a + 1
 if a == 2:
     a += 2
 elif a == 3:
-    print('nope')
+    assert 2 == 1, 'nope'
 b = 3
 print(a, b)
 """

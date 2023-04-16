@@ -28,6 +28,7 @@ class PreprocessTransformer(ast.NodeTransformer):
     - Unwrapping tuple assignments
     - Unwrapping `import` statements
     - Appending `return None` to all functions
+    - Rewriting `assert` with `if`
     """
 
     id_gen: IdentifierGenerator
@@ -118,6 +119,17 @@ class PreprocessTransformer(ast.NodeTransformer):
         ]
 
         return [self.generic_visit(init)] + assigns
+    
+    def visit_Assert(self, node: ast.Assert) -> VRet:
+        if node.msg is None:
+            err = ast.Raise(ast.Name('AssertionError'))
+        else:
+            err = ast.Raise(ast.Call(ast.Name('AssertionError'), [node.msg], []))
+
+        # `raise` is converted during code emitting instead of preprocessing
+        # in case future handling of try-catch requires changes on the way
+        # `raise` is compiled.
+        return ast.If(ast.UnaryOp(ast.Not(), node.test), [err], [])
     
     # nodes returned from this does not need to be visited
     def _mutate_assign(self, var: ast.expr, val: ast.expr):
