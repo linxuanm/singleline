@@ -9,12 +9,20 @@ from .types import CFNode
 def clean_up_graph(graph: nx.classes.DiGraph) -> None:
     """
     Removes all placeholder empty `NodeBundle` from the graph.
+
+    Note that nodes with no out-going edges are NEVER removed, as they act as
+    a terminated branch (e.g., a dummy node for returning after a loop or a
+    trailing if-else statement outside of function (`return None` does not
+    exist so the two branches cannot be merged)).
     """
 
     empty_nodes = [
         i for i in graph.nodes
         if isinstance(i, NodeBundle) and i.is_empty()
     ]
+
+    # Do not include nodes with no out-going edges.
+    empty_nodes = [i for i in empty_nodes if list(get_successors(graph, i))]
 
     for node in empty_nodes:
         for pred in graph.predecessors(node):

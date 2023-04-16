@@ -1,7 +1,7 @@
 import os
 import argparse
 
-from ..loader import load_program
+from ..compile import load_program
 
 
 def main():

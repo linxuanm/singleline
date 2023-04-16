@@ -203,7 +203,7 @@ ASSERT_TESTS = {
             assert cube(2) == 9
 
     test_square_and_cube()
-    """): True,
+    """): False,
 
     format("""
     def add(x, y):
@@ -241,18 +241,24 @@ ASSERT_TESTS = {
 class ControlFlowGraphTest(unittest.TestCase):
 
     def test_output(self):
-        for code, expect in SIMPLE_TESTS.items():
-            tree, id_gen = singleline.analysis.preprocess(code)
-            singleline.analysis.control_flow_pass(tree)
-
-            graph = tree.graph
-            code = singleline.transform.transpile(graph, id_gen, tree)
+        for source, expect in SIMPLE_TESTS.items():
+            code = singleline.compile(source)
 
             sout = io.StringIO()
             with contextlib.redirect_stdout(sout):
                 exec(code, {})
 
             self.assertEqual(sout.getvalue().strip(), expect)
+
+    def test_assert(self):
+        for source, has_error in ASSERT_TESTS.items():
+            code = singleline.compile(source)
+
+            if has_error:
+                with self.assertRaises(AssertionError):
+                    exec(code, {})
+            else:
+                exec(code, {})
 
 
 if __name__ == '__main__':

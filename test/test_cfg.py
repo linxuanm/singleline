@@ -60,11 +60,7 @@ class ControlFlowGraphTest(unittest.TestCase):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
 
     def test_simple_transpile(self):
-        tree, id_gen = singleline.analysis.preprocess(SIMPLE_FUNC)
-        singleline.analysis.control_flow_pass(tree)
-
-        graph = tree.graph
-        code = singleline.transform.transpile(graph, id_gen, tree, None)
+        code = singleline.compile(SIMPLE_FUNC)
 
         # TODO: finish this
 
