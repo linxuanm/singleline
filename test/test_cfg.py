@@ -36,6 +36,20 @@ def foo():
 foo()
 """
 
+RET_FUNC = """
+def foo(a):
+    if a == 3:
+        return 1
+    else:
+        if a == 2:
+            return 2
+    
+    b = a
+    c = b
+    c += a + b
+    return c
+"""
+
 
 class ControlFlowGraphTest(unittest.TestCase):
 
@@ -60,7 +74,7 @@ class ControlFlowGraphTest(unittest.TestCase):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
 
     def test_simple_transpile(self):
-        code = singleline.compile(SIMPLE_FUNC)
+        code = singleline.compile(RET_FUNC)
 
         # TODO: finish this
 

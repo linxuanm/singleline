@@ -100,6 +100,9 @@ class GraphTranspiler:
         elif isinstance(stmt, ast.Raise):
             ctx.add(f'(_ for i in ()).throw({ast.unparse(stmt.exc)})')
 
+        elif isinstance(stmt, ast.Yield) or isinstance(stmt, ast.YieldFrom):
+            ctx.add(f'({ast.unparse(stmt)})')
+
         elif isinstance(stmt, ast.FunctionDef):
             body = transpile(stmt.graph, self.id_gen, stmt)
 
