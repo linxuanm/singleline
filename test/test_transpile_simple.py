@@ -11,44 +11,31 @@ from .plot import plot_graph
 def format(code):
     return textwrap.dedent(code).strip('\n')
 
-
-TESTS = {
+SIMPLE_TESTS = {
     format("""
-    def greet(time):
-        if time < 12:
-            return "Good morning!"
-        elif time < 18:
-            return "Good afternoon!"
+    def greet_user(name):
+        if name == "Alice":
+            return "Hello, Alice!"
         else:
-            return "Good evening!"
+            return f"Hello, {name}!"
 
-    print(greet(10))
-    """): "Good morning!",
-
-    format("""
-    def triangle_type(a, b, c):
-        if a == b == c:
-            return "Equilateral"
-        elif a == b or b == c or a == c:
-            return "Isosceles"
-        else:
-            return "Scalene"
-
-    print(triangle_type(3, 3, 3))
-    """): "Equilateral",
+    print(greet_user("Alice"))
+    """): "Hello, Alice!",
 
     format("""
-    def odd_or_even(number):
+    import math
+
+    def check_even_odd(number):
         if number % 2 == 0:
-            return "Even"
+            return "even"
         else:
-            return "Odd"
+            return "odd"
 
-    print(odd_or_even(7))
-    """): "Odd",
+    print(check_even_odd(math.ceil(3.5)))
+    """): "odd",
 
     format("""
-    def grade(score):
+    def get_grade(score):
         if score >= 90:
             return "A"
         elif score >= 80:
@@ -60,32 +47,60 @@ TESTS = {
         else:
             return "F"
 
-    print(grade(85))
-    """): "B",
+    print(get_grade(75))
+    """): "C",
 
     format("""
-    def max_of_two(a, b):
-        if a > b:
-            return a
+    def calculate_tax(income):
+        def tax_bracket(income):
+            if income <= 9875:
+                return 0.10
+            elif income <= 40125:
+                return 0.12
+            elif income <= 85525:
+                return 0.22
+            elif income <= 163300:
+                return 0.24
+            elif income <= 207350:
+                return 0.32
+            elif income <= 518400:
+                return 0.35
+            else:
+                return 0.37
+
+        return income * tax_bracket(income)
+
+    print(calculate_tax(50000))
+    """): "11000.0",
+
+    format("""
+    def print_triangle(size):
+        if size <= 0:
+            return
+
+        print_triangle(size - 1)
+        print("*" * size)
+
+    print_triangle(3)
+    """): " *\n**\n***",
+
+    format("""
+    def compare_numbers(a, b, c):
+        if a == b and b == c:
+            return "All numbers are equal"
+        elif a == b or b == c or a == c:
+            return "Two numbers are equal"
         else:
-            return b
+            return "All numbers are different"
 
-    print(max_of_two(4, 7))
-    """): "7",
-
-    format("""
-    def leap_year(year):
-        if (year % 4 == 0 and year % 100 != 0) or (year % 400 == 0):
-            return "Leap year"
-        else:
-            return "Not a leap year"
-
-    print(leap_year(2020))
-    """): "Leap year",
+    print(compare_numbers(3, 5, 3))
+    """): "Two numbers are equal",
 
     format("""
-    def age_group(age):
-        if age < 13:
+    def check_age_category(age):
+        if age < 0:
+            return "Invalid age"
+        elif age < 13:
             return "Child"
         elif age < 18:
             return "Teenager"
@@ -94,49 +109,57 @@ TESTS = {
         else:
             return "Senior"
 
-    print(age_group(25))
+    print(check_age_category(42))
     """): "Adult",
 
     format("""
-    def sign(x):
+    def nested_function_example(x):
+        def inner_function(y):
+            if y > 0:
+                return y * 2
+            else:
+                return -y
+
         if x > 0:
-            return "Positive"
-        elif x < 0:
-            return "Negative"
+            return inner_function(x)
         else:
-            return "Zero"
+            return inner_function(-x)
 
-    print(sign(-5))
-    """): "Negative",
+    print(nested_function_example(-5))
+    """): "10",
 
     format("""
-    def discount(price, customer):
-        if customer == "student":
-            return price * 0.9
-        elif customer == "senior":
-            return price * 0.8
-        else:
-            return price
+    def is_palindrome(word):
+        word = word.lower()
+        return word == word[::-1]
 
-    print(discount(100, "senior"))
-    """): "80.0",
+    word = "Level"
+    if is_palindrome(word):
+        print(f"{word} is a palindrome.")
+    else:
+        print(f"{word} is not a palindrome.")
+    """): "Level is a palindrome.",
 
     format("""
-    def vowel_or_consonant(char):
-        if char.lower() in "aeiou":
-            return "Vowel"
+    def fibonacci(n):
+        if n <= 0:
+            return 0
+        elif n == 1:
+            return 1
         else:
-            return "Consonant"
+            return fibonacci(n - 1) + fibonacci(n - 2)
 
-    print(vowel_or_consonant("A"))
-    """): "Vowel"
+    n = 7
+    print(fibonacci(n))
+    """): "13"
 }
+
 
 
 class ControlFlowGraphTest(unittest.TestCase):
 
     def test_output(self):
-        for code, expect in TESTS.items():
+        for code, expect in SIMPLE_TESTS.items():
             tree, id_gen = singleline.analysis.preprocess(code)
             singleline.analysis.control_flow_pass(tree)
 

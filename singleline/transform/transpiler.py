@@ -92,8 +92,10 @@ class GraphTranspiler:
             ctx.add(ast.unparse(code))
 
         elif isinstance(stmt, ast.Return):
-            code = stmt.value
-            ctx.add(ast.unparse(code), True)
+            if stmt.value is None:
+                ctx.add('None', True)
+            else:
+                ctx.add(ast.unparse(stmt.value), True)
 
         elif isinstance(stmt, ast.Raise):
             ctx.add(f'(_ for i in ()).throw({ast.unparse(stmt.exc)})')
