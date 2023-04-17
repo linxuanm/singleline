@@ -37,17 +37,15 @@ foo()
 """
 
 RET_FUNC = """
-def foo(a):
-    if a == 3:
-        return 1
-    else:
-        if a == 2:
-            return 2
+def fibonacci(n):
+
+    if n <= 1:
+        return n
     
-    b = a
-    c = b
-    c += a + b
-    return c
+    return fibonacci(n - 1) + fibonacci(n - 2)
+
+num = int(input('Number: '))
+print(fibonacci(num))
 """
 
 
@@ -58,6 +56,7 @@ class ControlFlowGraphTest(unittest.TestCase):
         singleline.analysis.control_flow_pass(tree)
 
         graph = tree.graph
+        plot_graph(graph)
 
         common = singleline.misc.get_all_convergence(graph, tree)
         for i, ans in zip(common[-1].bundle, ['b=3', 'print(a,b)']):
@@ -75,7 +74,7 @@ class ControlFlowGraphTest(unittest.TestCase):
 
     def test_simple_transpile(self):
         code = singleline.compile(RET_FUNC)
-
+        print(code)
         # TODO: finish this
 
 
