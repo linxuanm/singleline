@@ -1,7 +1,7 @@
 # Utility code for performing replacing operation on source code.
 
 import ast
-from typing import List
+from typing import List, Set
 
 from ..misc.types import VRet
 
@@ -20,10 +20,29 @@ class MutationRecorder(ast.NodeVisitor):
     either a loop or a function definition when called externally.
     """
 
-    scope: List[ast.AST]
+    scope: List[Set[str]]
 
     def __init__(self) -> None:
         self.scope = []
 
     def visit_For(self, node: ast.For) -> None:
-        pass
+        targets = [node.target] if isinstance(targets, ast.Name) else node.target
+        mutated_vars = {i.id for i in targets}
+
+        self._collect_mutations(mutated_vars, node, True)
+
+    def visit_While(self, node: ast.While) -> None:
+        self._collect_mutations(set(), node, True)
+
+    def _collect_mutations(
+        self, mutated_vars: Set[str], node: ast.AST, propagate: bool = False
+    ) -> None:
+        self.scope.append(mutated_vars)
+        self.generic_visit(node)
+        self.scope.pop()
+
+        node.mutated_vars = mutated_vars
+
+        # Propagate mutated variables to parent scope.
+        if propagate and self.scope:
+            self.scope[-1].update(mutated_vars)
