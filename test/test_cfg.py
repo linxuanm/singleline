@@ -37,15 +37,7 @@ foo()
 """
 
 RET_FUNC = """
-def fibonacci(n):
-
-    if n <= 1:
-        return n
-    
-    return fibonacci(n - 1) + fibonacci(n - 2)
-
-num = int(input('Number: '))
-print(fibonacci(num))
+a, b = 1, 2
 """
 
 
@@ -56,7 +48,6 @@ class ControlFlowGraphTest(unittest.TestCase):
         singleline.analysis.control_flow_pass(tree)
 
         graph = tree.graph
-        plot_graph(graph)
 
         common = singleline.misc.get_all_convergence(graph, tree)
         for i, ans in zip(common[-1].bundle, ['b=3', 'print(a,b)']):
@@ -73,6 +64,8 @@ class ControlFlowGraphTest(unittest.TestCase):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
 
     def test_simple_transpile(self):
+        tree, id_gen = singleline.analysis.preprocess(RET_FUNC)
+
         code = singleline.compile(RET_FUNC)
         print(code)
         # TODO: finish this

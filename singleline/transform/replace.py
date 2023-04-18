@@ -3,6 +3,7 @@
 import ast
 from typing import List, Set
 
+from ..misc import get_params
 from ..misc.types import VRet
 
 
@@ -25,29 +26,23 @@ class MutationRecorder(ast.NodeVisitor):
     def __init__(self) -> None:
         self.scope = []
 
-    def visit_For(self, node: ast.For) -> None:
+    def visit_For(self, node: ast.For) -> any:
         targets = [node.target] if isinstance(targets, ast.Name) else node.target
         mutated_vars = {i.id for i in targets}
 
         self._collect_mutations(mutated_vars, node, True)
+        return self.generic_visit(node)
 
-    def visit_While(self, node: ast.While) -> None:
+    def visit_While(self, node: ast.While) -> any:
         self._collect_mutations(set(), node, True)
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
-        all_args = node.args.args + node.args.kwonlyargs
+        return self.generic_visit(node)
 
-        if hasattr(node.args, 'posonlyargs'):
-            all_args += node.args.posonlyargs
-
-        if node.args.vararg is not None:
-            all_args.append(node.args.vararg)
-
-        if node.args.kwarg is not None:
-            all_args.append(node.args.kwarg)
-
-        mutated_vars = {i.arg for i in all_args}
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> any:
+        mutated_vars = get_params(node)
         self._collect_mutations(mutated_vars, node)
+
+        return self.generic_visit(node)
 
     def _collect_mutations(
         self, mutated_vars: Set[str], node: ast.AST, propagate: bool = False

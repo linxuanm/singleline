@@ -1,6 +1,26 @@
 # Utilities that control the generation of identifiers.
 
+import ast
 from typing import Set
+
+
+def get_params(node: ast.FunctionDef) -> Set[str]:
+    """
+    Obtains the parameters of a function as a set of strings. This include the
+    names assigned to `*args` and `**kwargs`.
+    """
+    all_args = node.args.args + node.args.kwonlyargs
+
+    if hasattr(node.args, 'posonlyargs'):
+        all_args += node.args.posonlyargs
+
+    if node.args.vararg is not None:
+        all_args.append(node.args.vararg)
+
+    if node.args.kwarg is not None:
+        all_args.append(node.args.kwarg)
+
+    return {i.arg for i in all_args}
 
 
 def _to_excel_name(num: int) -> str:

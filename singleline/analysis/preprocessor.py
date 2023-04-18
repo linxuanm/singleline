@@ -1,7 +1,7 @@
 import ast
-from typing import Set, Tuple
+from typing import Any, Tuple
 
-from ..misc import IdentifierGenerator
+from ..misc import IdentifierGenerator, get_params
 from ..misc.types import VRet
 
 
@@ -11,7 +11,72 @@ def preprocess(program: str) -> Tuple[ast.AST, IdentifierGenerator]:
     transformer = PreprocessTransformer()
     transformer.visit(tree)
 
+    # Flattens all nested lists in statements.
+    tree = ast.parse(ast.unparse(tree))
+
     return tree, transformer.id_gen
+
+
+class InfoCollector(ast.NodeVisitor):
+    """
+    This class is responsible for collecting trivial data about a given piece
+    of code, as well as raise an error for unsupported statements.
+    """
+
+    id_gen: IdentifierGenerator
+
+    def __init__(self):
+        self.id_gen = IdentifierGenerator(set())
+
+    def visit_Name(self, node: ast.Name) -> Any:
+        self.id_gen.add_used(node.id)
+        return self.generic_visit(node)
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+        self.id_gen.add_used(node.name)
+
+        for name in get_params(node):
+            self.id_gen.add_used(name)
+
+        return self.generic_visit(node)
+    
+    def visit_ClassDef(self, node: ast.ClassDef) -> Any:
+        self.id_gen.add_used(node.name)
+        return self.generic_visit(node)
+    
+    def visit_Import(self, node: ast.Import) -> Any:
+        aliases = [i.name if i.asname is None else i.asname for i in node.names]
+
+        for name in aliases:
+            self.id_gen.add_used(name)
+
+        return self.generic_visit(node)
+    
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> Any:
+        aliases = [i.name if i.asname is None else i.asname for i in node.names]
+
+        for name in aliases:
+            self.id_gen.add_used(name)
+
+        return self.generic_visit(node)
+
+    def visit_Delete(self, node: ast.Delete) -> None:
+        self._raise_impl(node, 'The `del` statement is not yet supported!')
+    
+    def visit_Try(self, node: ast.Try) -> None:
+        self._raise_impl(node, 'The `try` statement is not yet supported!')
+
+    def visit_TryStar(self, node: ast.TryStar) -> None:
+        self._raise_impl(node, 'The `try*` statement is not yet supported!')
+
+    def visit_With(self, node: ast.With) -> None:
+        self._raise_impl(node, 'The `with` statement is not yet supported!')
+
+    def visit_AsyncWith(self, node: ast.AsyncWith) -> None:
+        self._raise_impl(node, 'The `async with` statement is not yet supported!')
+    
+    def _raise_impl(self, node: ast.AST, msg: str) -> None:
+        raise NotImplementedError(f'Line {node.lineno}: {msg}')
 
 
 class PreprocessTransformer(ast.NodeTransformer):
@@ -19,8 +84,7 @@ class PreprocessTransformer(ast.NodeTransformer):
     This class is responsible for applying preprocessing transformations
     to the AST to allow easy handling of syntax sugar. It is meant to
     apply rudimentary code transformation without keeping a context or
-    performing static analysis, as well as obtain some trivial information
-    about the program such as used identifier names.
+    performing static analysis.
 
     The current list of preprocessing operations are:
     - Rewriting indexed assignments (e.g., `a[0] = 2` to `a.__setitem__(0, 2)`)
@@ -33,23 +97,11 @@ class PreprocessTransformer(ast.NodeTransformer):
 
     id_gen: IdentifierGenerator
 
-    def __init__(self):
-        self.id_gen = IdentifierGenerator(set())
-
-    def visit_Name(self, node: ast.Name) -> VRet:
-        self.id_gen.add_used(node.id)
-
-        return self.generic_visit(node)
+    def __init__(self, id_gen: IdentifierGenerator):
+        self.id_gen = id_gen
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> VRet:
-        self.id_gen.add_used(node.name)
-
         node.body.append(ast.Return(ast.Constant(None)))
-        return self.generic_visit(node)
-    
-    def visit_ClassDef(self, node: ast.ClassDef) -> VRet:
-        self.id_gen.add_used(node.name)
-
         return self.generic_visit(node)
 
     def visit_AugAssign(self, node: ast.AugAssign) -> VRet:
@@ -61,9 +113,11 @@ class PreprocessTransformer(ast.NodeTransformer):
             lineno=node.lineno
         ))
     
+    # TODO: preprocess star names (e.g., `*foo, bar = [1, 2, 3]`)
     def visit_Assign(self, node: ast.Assign) -> VRet:
         chain = node.targets + [node.value]
 
+        # for `a = b = c = value`
         return [
             self._mutate_assign(k, v)
             for v, k in zip(chain[:: -1], chain[-2 :: -1])
@@ -77,7 +131,7 @@ class PreprocessTransformer(ast.NodeTransformer):
             for i in names
         ]
 
-        aliases = [i.asname if i.asname is not None else i.name for i in node.names]
+        aliases = [i.name if i.asname is None else i.asname for i in node.names]
         # `import xyz.abc` imports the left-most module `xyz` to the
         # left-most name `xyz`, thus `xyz = __import__('xyz.abc')`
         asn_names = [i.split('.')[0] for i in aliases]
