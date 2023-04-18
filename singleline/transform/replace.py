@@ -34,6 +34,21 @@ class MutationRecorder(ast.NodeVisitor):
     def visit_While(self, node: ast.While) -> None:
         self._collect_mutations(set(), node, True)
 
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        all_args = node.args.args + node.args.kwonlyargs
+
+        if hasattr(node.args, 'posonlyargs'):
+            all_args += node.args.posonlyargs
+
+        if node.args.vararg is not None:
+            all_args.append(node.args.vararg)
+
+        if node.args.kwarg is not None:
+            all_args.append(node.args.kwarg)
+
+        mutated_vars = {i.arg for i in all_args}
+        self._collect_mutations(mutated_vars, node)
+
     def _collect_mutations(
         self, mutated_vars: Set[str], node: ast.AST, propagate: bool = False
     ) -> None:
