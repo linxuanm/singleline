@@ -37,7 +37,12 @@ foo()
 """
 
 RET_FUNC = """
-a, b = 1, 2
+def foo(a, b):
+    if a == 3:
+        if b == 4:
+            return 42
+        print(123)
+    print(456)
 """
 
 

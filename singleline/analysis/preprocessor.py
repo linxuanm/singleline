@@ -8,7 +8,10 @@ from ..misc.types import VRet
 def preprocess(program: str) -> Tuple[ast.AST, IdentifierGenerator]:
     tree = ast.parse(program)
 
-    transformer = PreprocessTransformer()
+    collector = InfoCollector()
+    collector.visit(tree)
+
+    transformer = PreprocessTransformer(collector.id_gen)
     transformer.visit(tree)
 
     # Flattens all nested lists in statements.
@@ -66,8 +69,8 @@ class InfoCollector(ast.NodeVisitor):
     def visit_Try(self, node: ast.Try) -> None:
         self._raise_impl(node, 'The `try` statement is not yet supported!')
 
-    def visit_TryStar(self, node: ast.TryStar) -> None:
-        self._raise_impl(node, 'The `try*` statement is not yet supported!')
+    #def visit_TryStar(self, node: ast.TryStar) -> None:
+    #    self._raise_impl(node, 'The `try*` statement is not yet supported!')
 
     def visit_With(self, node: ast.With) -> None:
         self._raise_impl(node, 'The `with` statement is not yet supported!')
