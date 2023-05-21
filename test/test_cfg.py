@@ -37,12 +37,7 @@ foo()
 """
 
 RET_FUNC = """
-def foo(a, b):
-    if a == 3:
-        if b == 4:
-            return 42
-        print(123)
-    print(456)
+a, (b, c, d), e = 1, (2, (3, 4), 5), 6
 """
 
 
@@ -69,10 +64,20 @@ class ControlFlowGraphTest(unittest.TestCase):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
 
     def test_simple_transpile(self):
-        tree, id_gen = singleline.analysis.preprocess(RET_FUNC)
+        tree = ast.parse(RET_FUNC)
 
-        code = singleline.compile(RET_FUNC)
-        print(code)
+        collector = singleline.analysis.InfoCollector()
+        collector.visit(tree)
+
+        transformer = singleline.analysis.PreprocessTransformer(collector.id_gen)
+        transformer.visit(tree)
+
+        print(ast.unparse(tree))
+
+        #tree, id_gen = singleline.analysis.preprocess(RET_FUNC)
+
+        #code = singleline.compile(RET_FUNC)
+        #print(code)
         # TODO: finish this
 
 

@@ -155,7 +155,7 @@ class PreprocessTransformer(ast.NodeTransformer):
         packed_var_name = self.id_gen.throwaway()
         init = self._mutate_assign(ast.Name(packed_var_name), call)
 
-        # gets the `['def', 'ghi']` part of `from abc.def.ghi import foo`s
+        # gets the `['def', 'ghi']` part of `from abc.def.ghi import foo`
         additional_path = module.split('.')[1 :]
 
         # generators the `__.abc.def` in `foo = __.abc.def.foo`
@@ -204,7 +204,7 @@ class PreprocessTransformer(ast.NodeTransformer):
         
         # packed assignment
         if isinstance(var, ast.List) or isinstance(var, ast.Tuple):
-            name = self.id_gen.throwaway()
+            name = self.id_gen.get_name('unpack')
             init = ast.Assign([ast.Name(name)], val, lineno=0)
             return [
                 self.generic_visit(init),

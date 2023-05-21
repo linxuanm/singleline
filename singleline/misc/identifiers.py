@@ -59,7 +59,7 @@ class IdentifierGenerator:
     def add_used(self, name):
         self.invalid_pool.add(name)
     
-    def get_name(self):
+    def get_name(self, ctx):
         # TODO: respect name generation context for meaningful names
         name = _to_excel_name(self.counter)
         while name in self.invalid_pool:
