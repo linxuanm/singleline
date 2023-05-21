@@ -76,7 +76,10 @@ class InfoCollector(ast.NodeVisitor):
         self._raise_impl(node, 'The `with` statement is not yet supported!')
 
     def visit_AsyncWith(self, node: ast.AsyncWith) -> None:
-        self._raise_impl(node, 'The `async with` statement is not yet supported!')
+        self._raise_impl(
+            node,
+            'The `async with` statement is not yet supported!'
+        )
     
     def _raise_impl(self, node: ast.AST, msg: str) -> None:
         raise NotImplementedError(f'Line {node.lineno}: {msg}')
