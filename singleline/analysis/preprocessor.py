@@ -1,3 +1,4 @@
+from _ast import AsyncFor, AsyncFunctionDef
 import ast
 from typing import Any, Tuple
 
@@ -79,6 +80,18 @@ class InfoCollector(ast.NodeVisitor):
         self._raise_impl(
             node,
             'The `async with` statement is not yet supported!'
+        )
+
+    def visit_AsyncFor(self, node: AsyncFor) -> None:
+        self._raise_impl(
+            node,
+            'The `async for` statement is not yet supported!'
+        )
+
+    def visit_AsyncFunctionDef(self, node: AsyncFunctionDef) -> None:
+        self._raise_impl(
+            node,
+            'The `async def` statement is not yet supported!'
         )
     
     def _raise_impl(self, node: ast.AST, msg: str) -> None:

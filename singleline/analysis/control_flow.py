@@ -3,7 +3,7 @@ import networkx as nx
 from typing import List, Tuple, Union
 
 from ..misc.types import CFNode
-from ..misc.graph_utils import NodeBundle, DummyBundle, clean_up_graph, CFGLabels
+from ..misc.graph_utils import NodeBundle, clean_up_graph, CFGLabels
 from .interrupt import has_interrupt
 
 
@@ -144,7 +144,7 @@ class ControlFlowGraph:
         # no outgoing edges to tell the graph rewriter that an interruption
         # may occur.
         if has_ret:
-            dummy_node = DummyBundle()
+            dummy_node = NodeBundle()
             self.graph.add_node(dummy_node)
             self.graph.add_edge(node, dummy_node, label=CFGLabels.RET_FLAG)
 

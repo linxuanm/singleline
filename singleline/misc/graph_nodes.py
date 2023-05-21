@@ -55,16 +55,3 @@ class NodeBundle:
 
         return res
     
-
-class DummyBundle(NodeBundle):
-    """
-    A dummy bundle that is non-empty but ignored during transpiling. Used
-    as a placeholder node during graph construction and analysis (e.g., as
-    the `return` path of a loop). An instantiation of this class will not
-    be picked up as an empty bundle and get removed/optimized during graph
-    rewrite.
-    """
-
-    def is_empty(self) -> bool:
-        return False
-    

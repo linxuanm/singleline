@@ -43,6 +43,13 @@ def get_successors(graph: nx.classes.DiGraph, node: CFNode):
     )
 
 
+def has_labeled_edge(graph: nx.classes.DiGraph, node: CFNode, label: CFGLabels):
+    return bool([
+        i for i in graph.successors(node)
+        if graph[node][i].get('label') == label
+    ])
+
+
 def get_next_from_label(graph: nx.classes.DiGraph, node: CFNode, label: CFGLabels):
     out_edges = graph.edges(node, data=True)
     edges = [v for _, v, attr in out_edges if attr.get('label') == label]

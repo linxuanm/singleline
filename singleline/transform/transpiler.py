@@ -3,10 +3,11 @@ import networkx as nx
 from typing import Union
 
 from ..misc.identifiers import IdentifierGenerator
-from ..misc.graph_utils import get_all_convergence, get_next_from_label
+from ..misc.graph_utils import *
 from ..misc.graph_nodes import NodeBundle, CFGLabels
 from ..misc.types import CFNode
 from .transpile_context import ScopedExprManager
+from .replace import init_loop_mutations
 
 
 def transpile(
@@ -81,6 +82,14 @@ class GraphTranspiler:
                 f'{if_code} if {cond_code} else {else_code}',
                 try_ret
             )
+        
+        elif isinstance(node, ast.While):
+            inf = ast.parse('iter(int, 1)')
+            has_ret = has_labeled_edge(self.graph, node, CFGLabels.RET_FLAG)
+            init_loop_mutations(node)
+
+        else:
+            raise NotImplementedError
 
     def _transpile_single(self, stmt: ast.AST, ctx: ScopedExprManager) -> None:
         if isinstance(stmt, ast.Assign):

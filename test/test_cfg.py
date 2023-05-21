@@ -36,10 +36,6 @@ def foo():
 foo()
 """
 
-RET_FUNC = """
-a, (b, c, d), e = 1, (2, (3, 4), 5), 6
-"""
-
 
 class ControlFlowGraphTest(unittest.TestCase):
 
@@ -62,23 +58,6 @@ class ControlFlowGraphTest(unittest.TestCase):
         common = singleline.misc.get_all_convergence(graph, tree.body[0])
         for i, ans in zip(common[-1].bundle, ['b=3', 'print(b)']):
             self.assertEqual(ast.unparse(i).replace(' ', ''), ans)
-
-    def test_simple_transpile(self):
-        tree = ast.parse(RET_FUNC)
-
-        collector = singleline.analysis.InfoCollector()
-        collector.visit(tree)
-
-        transformer = singleline.analysis.PreprocessTransformer(collector.id_gen)
-        transformer.visit(tree)
-
-        print(ast.unparse(tree))
-
-        #tree, id_gen = singleline.analysis.preprocess(RET_FUNC)
-
-        #code = singleline.compile(RET_FUNC)
-        #print(code)
-        # TODO: finish this
 
 
 if __name__ == '__main__':
