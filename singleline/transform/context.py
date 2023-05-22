@@ -1,4 +1,4 @@
-from _ast import For, Name
+from _ast import ClassDef, For, FunctionDef, Name
 import ast
 from typing import Any, Set
 
@@ -33,4 +33,12 @@ class LocalVariableVisitor(ast.NodeVisitor):
         return self.generic_visit(node)
 
     def visit_For(self, node: For) -> Any:
-        pass
+        targets = [node.target] if isinstance(node.target, ast.Name) else node.target
+        for i in targets:
+            self.vars.add(i.id)
+
+    def visit_FunctionDef(self, node: FunctionDef) -> Any:
+        self.vars.add(node.name)
+
+    def visit_ClassDef(self, node: ClassDef) -> Any:
+        self.vars.add(node.name)

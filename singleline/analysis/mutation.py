@@ -28,7 +28,7 @@ class MutationRecorder(ast.NodeVisitor):
         self.scope = []
 
     def visit_For(self, node: ast.For) -> Any:
-        targets = [node.target] if isinstance(targets, ast.Name) else node.target
+        targets = [node.target] if isinstance(node.target, ast.Name) else node.target
         mutated_vars = {i.id for i in targets}
 
         self._collect_mutations(mutated_vars, node, True)
