@@ -1,4 +1,4 @@
-from _ast import Name
+from _ast import ClassDef, Name
 import ast
 from typing import Any, List, Set
 
@@ -22,20 +22,25 @@ class MutationRecorder(ast.NodeVisitor):
 
     scope: List[Set[str]]
 
+    # TODO: add func def, class def, etc
+
     def __init__(self) -> None:
         self.scope = []
 
-    def visit_For(self, node: ast.For) -> any:
+    def visit_For(self, node: ast.For) -> Any:
         targets = [node.target] if isinstance(targets, ast.Name) else node.target
         mutated_vars = {i.id for i in targets}
 
         self._collect_mutations(mutated_vars, node, True)
         return self.generic_visit(node)
 
-    def visit_While(self, node: ast.While) -> any:
+    def visit_While(self, node: ast.While) -> Any:
         self._collect_mutations(set(), node, True)
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> any:
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+        if self.scope:
+            self.scope[-1].add(node.name)
+
         mutated_vars = get_params(node)
         self._collect_mutations(mutated_vars, node)
     
